@@ -1,0 +1,59 @@
+---
+layout: post
+title: Reading Notes of The Go Programming Language
+tags: [Go]
+---
+
+## Chapter 01
+
+### 02
+##### `+=` is less efficient than `Join` in `strings` package
+`+=` will create a new string and assign it to the left variable. 
+``` s += "test" ```
+Thus, the old value in the left variable needs to be relased and the memory space of it should be recycled at the right time. So, when the size of strings needed to be connected is huge, `Join` has a better performance than `+=`
+
+| ![space-1.jpg](./../assets/img/the_go_programming_language/ex_1.3.png) | 
+|:--:| 
+| *Connecting string a for 10000 times* |
+
+An [explanation](https://stackoverflow.com/a/39312172) in detail for the same thing in `Python`. I guess this applies for `Go` as well.
+
+### 03
+###### the iteration order of map is not fixed
+This design is on purpose so that the program cannot rely on a specific iteration order. [Here](https://stackoverflow.com/questions/11853396/google-go-lang-assignment-order) for more specific explanation.
+
+##### the verbs for printf
+```
+%d          decimal integer
+%x, %o, %b  hexadecimal, octal, binary
+%f, %g, %e  floating point： 3.141593 3.141593e+00
+%t          bool：true or false
+%c          char(rune)(Unicode)
+%s          string
+%q          string with double quote "abc" 
+            or char with single quote 'c'
+%v          natual format of a varible
+%T          type of varible
+%%          %
+```
+### 06
+##### goroutine and channel
+when a go routine tries to send through or receive from a `channel`, this go routine will be blocked until the other end of the channel has finished receiving or sending.
+
+##### int to string
+Type cast doesn't work well, `string(i)`. Recommened way: `strconv.Itoa(i)` from package `strconv`. More methods [here](https://stackoverflow.com/a/29841190).
+
+But why doesn't type cast from int to string (`string(i)`) work? It has something to do with the [underlying type](https://medium.com/golangspec/conversions-in-go-4301e8d84067) in `Go`.
+
+### 07
+##### a quick way to handle err
+```
+if err := r.ParseForm(); err != nil {
+	log.Print(err)
+}
+```
+
+##### query in http
+A http url like this `http://localhost:8000/?cycles=20` means that after the question mark you can pass key-value pairs and use them in the server side.
+
+In `GO`, the way to get query is `cycles, _ = strconv.Atoi(r.URL.Query().Get("cycles"))`, `r` is a `httpRequest` object.
