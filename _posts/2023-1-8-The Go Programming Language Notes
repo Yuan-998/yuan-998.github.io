@@ -171,3 +171,7 @@ fmt.Println(float64(c)) // 100
 ### 06
 ##### name exportation
 when a name (variable name, function name) begins with captical letter, then it's exported.
+
+### exercise
+##### Hamming weight
+A very fast way to do bit population count. https://en.wikipedia.org/wiki/Hamming_weight
