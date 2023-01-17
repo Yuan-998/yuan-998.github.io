@@ -1,14 +1,14 @@
 ---
 layout: post
 title: From Ticktock to TikTok
-subtitle: An insight from physical world to distributed system
+subtitle: An insight from physical world into distributed system
 cover-img: "../assets/img/DistributedSystem/everyday-myths-time.jpg"
 tags: [Distributed Systems]
 readtime: true
 ---
 
 ## Introduction
-The *Ticktock* in the title means the sound from the swing of a pendulum in a clock. While *TikTok* stands for the vastly distributed computing system in modern IT industry. In this article, I will try to explain the theorical foundation of distributed system starting from physical time.
+The *Ticktock* in the title means the sound from the swing of a pendulum in a clock. While *TikTok* stands for the vastly distributed computing system in modern IT industry. They two seem to be something irrelevant with each other. However, in this blog, I will try to explain the theorical foundation of distributed system starting from physical time.
 
 ## Light Cone
 In many articles or slides discussing distributed system, *light cone* is frequently mentioned in order to show that the lack of total order is a fundmental property of the distributed system. However, it is often briefly discussed.
@@ -57,9 +57,42 @@ They happened to be the two pain spots of distributed system.
 ### Global Clock
 Time is a man-made concept. The temporal interval between the happenings of two events is called time. In order to make this concept universal, in [history of timekeeping devices](https://en.wikipedia.org/wiki/History_of_timekeeping_devices), there are many tools being utilized, e.g. Stonehenge, obelisk, water clock, incense clock, and sandglass. The idea behind these tools is to use something that happens temporally regularly to represent an time interval. Nowsdays, the idea of time is still the same but the tools has changed dramatically ([atomic clock](https://en.wikipedia.org/wiki/Atomic_clock), [satellites](https://www.gps.gov/applications/timing/)) to provide more precise measurements of time.
 
-Unfortunately, even with these highly precise and synchronized time measurement, [it is still unreliable to use physical time directly in distributed system](http://infolab.stanford.edu/~burback/dadl/node91.html#:~:text=In%20a%20distributed%20system%20there,clock%20has%20the%20exact%20time.).
+Unfortunately, even with these highly precise and synchronized time measurements, [it is still unreliable to use physical time directly in distributed system](http://infolab.stanford.edu/~burback/dadl/node91.html#:~:text=In%20a%20distributed%20system%20there,clock%20has%20the%20exact%20time.).
 
 ### Communication
 In real world, there are many medium to carry information, sound, smell, and light. But in distributed system, the only mediunm is the network. Machines exchange information through network.
 
-But network is unstable. It might slow down, occasionally disconnect ([shark bite](https://www.forbes.com/sites/amitchowdhry/2014/08/15/how-google-stops-sharks-from-eating-undersea-cables/)), or even permently disconnect (manually unpluged). If we apply light cone to these situation, we might see something like Figure 2.
+But network is unstable. It might slow down, occasionally disconnect ([shark bite](https://www.forbes.com/sites/amitchowdhry/2014/08/15/how-google-stops-sharks-from-eating-undersea-cables/)), or even permently disconnect (manually unpluged). If we apply light cone to the network in distributed system, we might see something like Figure 2. The first one means that the information is being spreaded steadily through the network. The second means that there are some network turbulentce making the speading sometimes faster and sometimer slower. As for the last one, I call it *network black hole*. You can see the information has stopped spreading sometimes like the light can't escape from blackhole.
+
+![figure-2](../assets/img/DistributedSystem/figure-2.png)
+
+
+### Summary
+Now we are clear of what difficulties are there when implementating a distributed system. We will discuss how to address these problems in the following content.
+
+
+## Distributed System
+### Logical Clock
+The solution to the lack of global clock in distributed system is logical clock. There are two kinds of logic clock, [lamport clock](https://lamport.azurewebsites.net/pubs/time-clocks.pdf) and [vector clock](https://en.wikipedia.org/wiki/Vector_clock). With logic clock, events in distributed system can be arranged in partial order or total order. For more detail, please refer to [this slide](http://www.cs.cmu.edu/afs/cs/academic/class/15712-f15/www/lectures/05-ordering.pdf).
+
+### Broadcast Algorithm
+#### Network Behaviour
+Nework behaviour describes what might happen between **point-to-point** communication between two nodes. The network behaviour in distributed system can be classified into three.
+> - **Reliable** links: A message is received if and only if it is sent. Message may be reordered
+> - **Fair-loss** links: Messages may be lost, duplicated, or reordered. If you keep retrying, a message eventually gets through
+> - **Arbitrary** links: A malicious adversary may interfere with messages (eavesdrop, modify, drop, spoof, replay)
+
+#### Broadcast
+One node sends a message and all nodes in the group deliver it. Broadcast in distributed system is built upon point-to-point communication. Hence, broadcast may drop messages or try to retransmit dropped messages to provide **reliable** broadcast. 
+
+The broadcast algorithm acts as a middleware between message sender/receiver and the network. It can be broken down into two layers:
+> 1. Make best-effort broadcast **reliable** by retransmitting dropped messages
+> 2. Enforce delivery order on top of **reliable broadcast**
+
+#### Summary
+Till now, the problems seem to be solved. Logical clock can act as a global clock in distributed system and broadcast algorithm can **reliably** broadcast all messages and get them ordered.
+
+However, the word `reliable` is constantly mentioned above. Broadcast algorithm works on the condition that the underlying network can provide the ground for reliable communication. But what if in a distributed system, some nodes in it are temporarily or permently disconnected from the rest, which means any communication between can be delayed for some amount of time or forever. How should distributed system deal with this situation?
+
+
+## CAP Theorem
