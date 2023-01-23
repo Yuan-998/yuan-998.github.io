@@ -92,7 +92,36 @@ The broadcast algorithm acts as a middleware between message sender/receiver and
 #### Summary
 Till now, the problems seem to be solved. Logical clock can act as a global clock in distributed system and broadcast algorithm can **reliably** broadcast all messages and get them ordered.
 
-However, the word `reliable` is constantly mentioned above. Broadcast algorithm works on the condition that the underlying network can provide the ground for reliable communication. But what if in a distributed system, some nodes in it are temporarily or permently disconnected from the rest, which means any communication between can be delayed for some amount of time or forever. How should distributed system deal with this situation?
-
+However, the word `reliable` is constantly mentioned above. Broadcast algorithm works on the condition that the underlying network can provide the ground for reliable communication. But what if in a distributed system, some nodes in it are temporarily or permently disconnected from the rest, which means any communication between can be delayed for some amount of time or forever. How should distributed system behave under this situation?
 
 ## CAP Theorem
+CAP theorem states that when there is a **network partition** in distributed system, the system chooses either **consistency** (every read receives the most recent write or an error) or **availability** (every request receives a response, without the guarantee that it is the most recent write).
+
+CAP theorem indicates the tradeoff for a distributed system when facing network partition.
+
+### Variant of CAP Theorem
+In the actual implementation of a distributed system, how is a network partition detected? How does the system distinguish between messages arriving slowly and messages never arriving?
+
+The answer is **latency**. When the communication between nodes in distributed system has delayed for some certain time, it is considered a network partition. In this case, CAP theorem can be interpreted in another way called **PACELC theorem**.
+
+```
+PACELC:
+if there is a network Partition:
+    choose between Availability and Consistency
+else
+    choose between Latency and Consistency
+```
+### Timing Assumptions
+Based on latency, we can introduce timing assumptions for distributed system.
+- **Synchronous**: Message latency no greater than a know upper bound. Nodes execute algorith at a know speed.
+- **Paritally synchronous**: The system is asynchronous for some finite (but unknown) periods of time, synchronous otherwise
+- **Asynchronous**: Messages can be delayed arbitrarily. Nodes can pause execution arbitrarily. No timing guarantees at all.
+
+### Analysis on Raft
+Let's try to analyse raft to understand the whole thing above better.
+
+Raft chooses *A* over *C* when *P* and *L* over *C* when *no P*. 
+
+When there is a network partition, as long as there are still a quorum of nodes available, raft can still provide service. Data consistency will be guaranteed when the disconnected nodes join back. 
+
+When there is no network partition, as long as the data are written by a quorum of nodes, the system continues without blocking. The nodes will be inconsistent for some finite periods of time, but eventually they will be consistent.
