@@ -53,5 +53,5 @@ In figure 2, files from two levels are merged and then split in order to be glob
 
 The SSTable is **immutable**. When files from different level are merged, the operation is actually not on the files directly. It first read the data in all files, order the data and then write them into **new files**. The old files will be garbage collected.
 
-#### Not Globally ordered in level 0
+#### Not Globally ordered at level 0
 Level 0 is some kind of special case. It receives the flushed file directly from memory.
