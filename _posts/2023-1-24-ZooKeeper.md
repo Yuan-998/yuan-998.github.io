@@ -6,6 +6,11 @@ tags: [Distributed Systems]
 readtime: true
 ---
 
+## Introduction
+ZooKeeper is not designed for general data storage. Instead, znodes map to abstractions of the client application, typically correspnding to meat-data used for coordination purposes.
+
+Implementing `wait-free` data objects differentiates ZooKeeper significantly from systems based on blocking primitives such as locks.
+
 ## ZooKeeper Architecture
 ![architecture](../assets/img/zookeeper/architecture.png)
 Severs are classified into **leader** and **follower**. This is pretty much the same as Raft. However, unlike Raft, all nodes in ZooKeeper can handle **read** requests and **write** requests still go to leader.
@@ -46,7 +51,7 @@ Two kinds of znode:
 
 Both znodes can store data. However, ephmeral znode cannot have any child znodes.
 
-When creating new znodes, `sequential` flag can be added so that znodes will be created sequentially. When the flag is set, a monotonically increasing counter will be appended at the end of the name of newly created znodes, `name+seq_No.`. The counter is maintained by the father node.
+When creating new znodes, `sequential` flag can be added so that the value of a monotonically increasing counter will be appended at the end of the name of newly created znodes, `name+seq_No.`. The counter is maintained by the father node.
 
 So, there are actually in total 4 types of znode:
 - `PERSISTENT`
@@ -64,11 +69,14 @@ So, there are actually in total 4 types of znode:
 ## APIs
 > **create(path, data, flags)**: Create a new *znode* at *path* storing *data*. A znode can only be created if it does not already exists. *flags* are used to indicate whether it is a regular or ephemeral and sequential or not.
 > **delete(path, version)**: If the version of *znode* at the *path* equals *version*, then delete the znode
-> **exists(path, watch)**: Return true if there is a *znode* at *path*, return false else. *watch* is to monitor this znode.
-> **getData(path, watch)**: return data and metadata (e.g. version). *watch* works the same as above.
+> **exists(path, watch)**: Return true if there is a *znode* at *path*, return false else.
+> **getData(path, watch)**: return data and metadata (e.g. version).
 > **setData(path, data, version)**: If *znode.version* == *version*, then update the *data*.
 > **getChildren(path, watch)**: Return all names of child znodes
-> **sync(path)**：Wait until all operations that updates the data arrive.
+> **sync(path)**：Wait until all operations that updates the data arrive. `Sync` causes a server to apply all peding write requests before processing the read without the overhead of a full write. This primitive is similar in idea to the `flush` primitive of ISIS.
+
+### watch
+*Watch* is to monitor this znode. *Watch* is to allow clients to receive timely notifications of changes without requiring polling. When a client issues a read operation with a watch flag set, the operation completes as normal except that the server promises to notify the client when the information returned has changed. *Watches* are **one-time trigger associated with a session**; they are unregistered once triggered or the session closed. *Watches* indicate that a change has happended, but **do not provide the change**.
 
 ### Features about APIs
 - `create` is exclusive
@@ -110,3 +118,10 @@ It depends on the implementation. In most cases, the client library probably reg
 For example, a Go client for ZooKeeper implements it by passing a channel into "GetW()" (get with watch); when the watch triggers, an "Event" structure is sent through the channel. The application can check the channel in a select clause.
 
 See https://godoc.org/github.com/samuel/go-zookeeper/zk#Conn.GetW.
+
+### Difference between `watch` and `sync`
+`sync` will **block** the `read` operation until all pending `write` operations are applied. 
+
+Whereas `watch` will notify the client when there is a change. If the client send `read` request immediately after got notified, it is not guaranteed to read the lastest value since between got notified and read, there can be other `update` operations.
+
+There are different choices of tradeoff between latency and consistency.
