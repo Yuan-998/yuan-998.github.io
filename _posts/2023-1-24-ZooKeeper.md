@@ -67,7 +67,7 @@ So, there are actually in total 4 types of znode:
 - **Replicated Database**: Each replica has a copy in memory of the ZooKeeper state. ZooKeeper takes snapshots periodically and they are *fuzzy snapshots* since the state will not be locked to take snapshot. Instead, reading the state atomically and write them to disk.
 
 ## APIs
-> **create(path, data, flags)**: Create a new *znode* at *path* storing *data*. A znode can only be created if it does not already exists. *flags* are used to indicate whether it is a regular or ephemeral and sequential or not.
+> **create(path, data, flags)**: Create a new *znode* at *path* storing *data* and return the name of the new znode. A znode can only be created if it does not already exists. *flags* are used to indicate whether it is a regular or ephemeral and sequential or not.
 > **delete(path, version)**: If the version of *znode* at the *path* equals *version*, then delete the znode
 > **exists(path, watch)**: Return true if there is a *znode* at *path*, return false else.
 > **getData(path, watch)**: return data and metadata (e.g. version).
@@ -125,3 +125,6 @@ See https://godoc.org/github.com/samuel/go-zookeeper/zk#Conn.GetW.
 Whereas `watch` will notify the client when there is a change. If the client send `read` request immediately after got notified, it is not guaranteed to read the lastest value since between got notified and read, there can be other `update` operations.
 
 There are different choices of tradeoff between latency and consistency.
+
+### Does znode have permissions? E.g. znode created by a client can only be deleted by the same client.
+The permission of a znode can be managed specifically. See more [here](https://zookeeper.apache.org/doc/r3.5.7/zookeeperProgrammers.html#sc_ACLPermissions).
