@@ -31,3 +31,6 @@ Slower server clock / Faster client clock -> no errors but extra traffic
 ```
 
 They can be detected by either a synchronization protocol or by including timestamps in lease-related messages.
+
+## In-depth Analysis on Lease Timing
+https://zhuanlan.zhihu.com/p/268370901 (Written in Chinese)
