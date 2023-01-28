@@ -34,3 +34,8 @@ They can be detected by either a synchronization protocol or by including timest
 
 ## In-depth Analysis on Lease Timing
 https://zhuanlan.zhihu.com/p/268370901 (Written in Chinese)
+
+
+## Questions
+### Does lease require locking?
+Leases are essentially a distributed lock with a granted duration.
