@@ -2,7 +2,7 @@
 layout: post
 title: LSM Tree
 subtitle: Some questions regarding LSM tree
-tags: [Distributed Systems, Data Structure]
+tags: [Distributed System, Data Structure]
 readtime: true
 ---
 

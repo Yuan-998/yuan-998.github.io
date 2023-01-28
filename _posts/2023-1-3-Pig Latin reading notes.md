@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Reading Notes of Pig Latin
-tags: [MapReduce, Distributed Systems]
+tags: [MapReduce, Distributed System]
 readtime: true
 ---
 

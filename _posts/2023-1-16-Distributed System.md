@@ -3,7 +3,7 @@ layout: post
 title: From Ticktock to TikTok
 subtitle: An insight from physical world into distributed system
 cover-img: "../assets/img/DistributedSystem/everyday-myths-time.jpg"
-tags: [Distributed Systems]
+tags: [Distributed System]
 readtime: true
 ---
 

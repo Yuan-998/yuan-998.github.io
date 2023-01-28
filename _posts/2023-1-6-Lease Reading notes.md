@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Reading Notes of Lease
-tags: [Lease, Distributed Systems, Consistency Protocol]
+tags: [Lease, Distributed System, Consistency Protocol]
 readtime: true
 ---
 

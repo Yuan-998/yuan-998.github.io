@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Reading Notes of MapReduce Paper
-tags: [MapReduce, Distributed Systems]
+tags: [MapReduce, Distributed System]
 readtime: true
 ---
 

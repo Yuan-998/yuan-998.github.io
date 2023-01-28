@@ -2,7 +2,7 @@
 layout: post
 title: ZooKeeper
 subtitle: Some questions regarding ZooKeeper
-tags: [Distributed Systems]
+tags: [Distributed System]
 readtime: true
 ---
 
