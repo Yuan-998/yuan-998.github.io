@@ -9,6 +9,8 @@ readtime: true
 ## Overview
 ![broadcast](../assets/img/broadcast/broadcast.png)
 
+This is the slide from the lecture, Distributed System, at TUM taught by Dr. Martin Kleppmann.
+
 ## Questions
 ### 1. Why does FIFO-total order broadcast imply Causal broadcast?
 
@@ -17,6 +19,7 @@ readtime: true
 > **In general we do not get causal ordering unless the only communication is by broadcast**: if `P1` sends a broadcast to the coordinate and then a message to `P2`, and `P2` responds to this message by itself sending a broadcast to the `coordinator`, then the two broadcasts are causally related but there is no guarantee which arrives at the coordinator first. 
 > 
 > On the other hand, if the only way that `P1` and `P2` communicate is through broadcasts, then any broadcast of `P1` that happens-before some broadcast of `P2` must be connected by a chain of intermediate broadcasts that left the coordinator before `P2's` broadcast arrived; so **in this case we do get causal ordering**.
+> 
 > -- <cite>https://www.cs.yale.edu/homes/aspnes/pinewiki/Broadcast.html</cite>
 
 It is assumed here that **single leader approach** is deployed to have total order broadcast.
