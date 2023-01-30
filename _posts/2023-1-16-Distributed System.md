@@ -8,7 +8,7 @@ readtime: true
 ---
 
 ## Introduction
-The *Ticktock* in the title means the sound from the swing of a pendulum in a clock. While *TikTok* stands for the vastly distributed computing system in modern IT industry. They two seem to be something irrelevant with each other. However, in this blog, I will try to explain the theorical foundation of distributed system starting from physical time.
+The *Ticktock* in the title means the sound from the swing of a pendulum in a clock. Whereas *TikTok* stands for the vastly distributed computing system in modern IT industry. They seem to be something irrelevant with each other. In this blog, I will provide an way starting from physical time to know the difficulties of implementating a distributed system and to understand the tradeoff among different architectures of distributed system.
 
 ## Light Cone
 In many articles or slides discussing distributed system, *light cone* is frequently mentioned in order to show that the lack of total order is a fundmental property of the distributed system. However, it is often briefly discussed.
