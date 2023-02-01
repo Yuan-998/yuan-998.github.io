@@ -46,16 +46,21 @@ Pig offers a Java library. This option permits dynamic construction of Pig Latin
 #### Command Transformation
 ![Compilation_and_execution](../assets/img/Pig/Pig_compilation_execution.png)
 
+A Pig programm goes through a series of transformation steps before being executed.
+
 #### Parsing
 The parser checks the syntactical correctness of the program, validity of all referenced variables, type, schema inference, and other checks.
 
 The output of the parser is a logical plan organised in a directed acyclic graph ([DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph)) with a **one-to-one correspondence** between Pig Latin statements and logical operators
 
 #### Logical Optimizer
-In this stage, the logical operators will be optimized by a *logical optimizer*, such as [projection pushdown](https://towardsdatascience.com/predicate-vs-projection-pushdown-in-spark-3-ac24c4d11855). Then they will be compiled into a series of Map-Reduce jobs
+In this stage, the **logical operators** will be optimized by a *logical optimizer*, such as [projection pushdown](https://towardsdatascience.com/predicate-vs-projection-pushdown-in-spark-3-ac24c4d11855). Then they will be compiled into a series of Map-Reduce jobs.
+
+#### Map-Reduce Compiler
+The optimized logical plan is then compiled into a series of Map-Reduce jobs.
 
 #### Map-Reduce Optimizer
-Optimization based on Map-Reduce *combiner* stage to perform early partial aggregation
+Optimization based on Map-Reduce *[combiner](./2023-1-3-Mapreduce%20reading%20notes.md#Combiner-Function)* stage to perform early partial aggregation.
 
 In the end, the DAG of optimized Map-Reduce jobs is topologically sorted and ready to be executed by Hadoop in that order.
 
@@ -81,6 +86,8 @@ From logical plan to Map-Reduce execution plan.
 
 `Logical Plan -> Physical Plan -> MapReduce Plan`
 
+This is done by the MapReduce compiler??
+
 #### Logical Plan Structure
 The work of [parser](#parsing).
 ![Logical_plan](../assets/img/MapReduce/logical_plan.png)
@@ -89,13 +96,13 @@ Pig currently performs a limited suite of logical optimizations to transform the
 
 #### Map-Reduce Execution Model
 ![Exexcution_model](../assets/img/MapReduce/execution_model.png)
-
-1. Map Stage. `Map` stage process the raw input data one by one and produces a stream of data items annotated with keys.
-2. Local Sort. To sort the data from map stage by key
-3. Combine. This is an optional stage. It is for partial aggregation.
-4. Shuffle Stage. Redistribute data among manchines to achieve a global organization of data by key.
-5. Merge/Combine. A single ordered stream in merge stage and a possible combiner after each intermediate merge step.
-6. Reduce Stage. Process the data associated with each key in turn, often performing some sort of aggregation.
+The execution stages of a hadoop MapReduce job.
+1. **Map Stage**. `Map` stage process the raw input data one by one and produces a stream of data items annotated with keys.
+2. **Local Sort**. To sort the data from map stage by key
+3. **Combine**. This is an optional stage. It is for partial aggregation.
+4. **Shuffle Stage**. Redistribute data among manchines to achieve a global organization of data by key.
+5. **Merge/Combine**. A single ordered stream in merge stage and a possible combiner after each intermediate merge step.
+6. **Reduce Stage**. Process the data associated with each key in turn, often performing some sort of aggregation.
 
 #### Logical-to-Map-Reduce Compilation
 Pig first translates a logical plan into a physical plan, and then embeds each physical operator inside a Map-Reduce stage to arrive at a Map-Reduce plan.
