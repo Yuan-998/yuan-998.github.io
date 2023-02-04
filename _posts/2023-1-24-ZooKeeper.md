@@ -13,7 +13,7 @@ Implementing `wait-free` data objects differentiates ZooKeeper significantly fro
 
 ## ZooKeeper Architecture
 ![architecture](../assets/img/zookeeper/architecture.png)
-Severs are classified into **leader** and **follower**. This is pretty much the same as Raft. However, unlike Raft, all nodes in ZooKeeper can handle **read** requests and **write** requests still go to leader.
+Severs are classified into **leader** and **follower**. This is pretty much the same as Raft. However, unlike Raft, all nodes in ZooKeeper can handle **read** requests while **write** requests still go to leader.
 
 So, we can say that **ZooKeeper is designed for distributed system with read-dominant workloads**.
 
@@ -33,7 +33,7 @@ For write requests, all writes requests from a single client will be sent to the
 
 For read requests, a read request can be carried on multiple server on the condition that a server crashes when carrying out the read request and the read request has be to redirected to other server.
 
-Let's say there is **only one client** in the system and the client issued a sequence of requests like this, `write(A=10), write(B=8), read(B), read(A)`. These requests must be carried in this order, which means `read(B)` returns `10`. There is a mechanism (zxid) in ZooKeeper to make sure that no matter the read request goes to which server, it will get the lastest result. However, this is not guaranteed if there are multiple clients. Other clients might write B as well and the requests might be arranged between `write(B=8)` and `read(B)`.
+Let's say there is **only one client** in the system and the client issued a sequence of requests like this, `write(A=10), write(B=8), read(B), read(A)`. These requests must be carried in this order, which means `read(B)` returns `8`. There is a mechanism (zxid) in ZooKeeper to make sure that no matter the read request goes to which server, it will get the lastest result. However, this is not guaranteed if there are multiple clients. Other clients might write B as well and the requests might be arranged between `write(B=8)` and `read(B)`.
 
 So, is ZooKeeper linearizable or not?
 **ZooKeeper is neither totaly linearizable or totaly non-linearizable.** It provides linearizability only when there is one client.
@@ -49,7 +49,7 @@ Two kinds of znode:
    - **Regular**: Clients manipulate regular znodes by creating and deleting them explicitly
    - **Ephmeral**: Clients create such znodes, and they either delete them explicitly, or let the system remove them automatically when the session that creates them terminates (deliberately or due to a failure)
 
-Both znodes can store data. However, ephmeral znode cannot have any child znodes.
+Both znodes can store data. However, **ephmeral znode cannot have any child znodes**.
 
 When creating new znodes, `sequential` flag can be added so that the value of a monotonically increasing counter will be appended at the end of the name of newly created znodes, `name+seq_No.`. The counter is maintained by the father node.
 
@@ -65,6 +65,29 @@ So, there are actually in total 4 types of znode:
 - **Request Processor**: Turn the received requests into *idempotent* transations
 - **Atomic Broadcast**: Based on *zab* to reach consensus
 - **Replicated Database**: Each replica has a copy in memory of the ZooKeeper state. ZooKeeper takes snapshots periodically and they are *fuzzy snapshots* since the state will not be locked to take snapshot. Instead, reading the state atomically and write them to disk.
+  
+#### Are zookeeper's API functions idempotent?
+
+Definitely not.  E.g., sequential znode create bumps counter
+#### Why does section 4.1 say "transactions are idempotent"?
+
+API calls get translated into idempotent server-side transactions `<transactionType, path, value, new-version>`.
+Transactions sent through atomic broadcast, replicated on all servers
+
+#### What's the issue with calculating "future state"?
+
+Zookeeper pipelines operations. 
+
+So there may be multiple transactions where atomic broadcast not complete. Can't apply state if transactions not committed. 
+
+But to make it idempotent, need to know the result (e.g., new counter value). So calculate state based on previous pending transactions, too.
+
+#### Why not just apply transactions to in-memory state before atomic broadcast? 
+What if there's a network partition, new primary elected w/o applying Would need to reconstruct memory state, and transactions not reversible 
+
+#### What is the advantage of idempotent transactions? 
+- Allows write-ahead logging 
+- Also, makes fuzzy snapshot mechanism work.
 
 ## APIs
 > **create(path, data, flags)**: Create a new *znode* at *path* storing *data* and return the name of the new znode. A znode can only be created if it does not already exists. *flags* are used to indicate whether it is a regular or ephemeral and sequential or not.
@@ -75,6 +98,15 @@ So, there are actually in total 4 types of znode:
 > **getChildren(path, watch)**: Return all names of child znodes
 > **sync(path)**：Wait until all operations that updates the data arrive. `Sync` causes a server to apply all peding write requests before processing the read without the overhead of a full write. This primitive is similar in idea to the `flush` primitive of ISIS.
 
+There are *synchronous* and *asynchronous* versions of the API calls above. 
+
+An application calls the synchronous API when it needs to execute a single ZooKeeper operation and it has no concurrent tasks to execute.
+
+An application calls the asynchronous API when it has multiple outstanding ZooKeeper operations and other tasks to be executed in parallel.
+
+#### No open() or close()
+There are no handles to access *znodes*. Each request has to include the full path of the *znode* being operated on.
+
 ### watch
 *Watch* is to monitor this znode. *Watch* is to allow clients to receive timely notifications of changes without requiring polling. When a client issues a read operation with a watch flag set, the operation completes as normal except that the server promises to notify the client when the information returned has changed. *Watches* are **one-time trigger associated with a session**; they are unregistered once triggered or the session closed. *Watches* indicate that a change has happended, but **do not provide the change**.
 
@@ -84,10 +116,59 @@ So, there are actually in total 4 types of znode:
 - all methods come with both synchronous and asynchronous version
 - update operations (`delete` and `setData`) fail when anticipated version does not match znode's version
 - avoid polling by flagging `watch`
-  
+
+## Examples
+### Simple Locks without Herd Effect
+Lock
+```go
+n = create(l + "/lock-", EPHEMERAL | SEQUENTIAL)
+C = getChildren(1, false)
+if n is lowest znode in C, exit  // n gets the lock
+p = znode in C ordered just before n
+if exists(p, true) wait for watch event // wait for the previous to be deleted (lock freed)
+goto 2
+```
+Unlock
+```go
+delete(n, -1)  // delete own ephemeral node to release the lock, -1 to match any version
+```
+
+### Read/Write Locks
+Write Lock (the same as global lock)
+```go
+n = create(l + "/write-", EPHEMERAL | SEQUENTIAL)
+C = getChildren(l, false)
+if n is the lowest znode in C, exit
+p = znode in C ordered just before n
+if exists(p, true) wait for event
+goto 2
+```
+Read Lock
+```go
+n = create(l + "/read-", EPHEMERAL | SEQUENTIAL)
+C = getChildren(l, false)
+if no writes znodes lower that n in C, exit  // get read lock, read lock can be shared
+p = write znode in C ordered just before n
+if exists(p, true) wait for event
+goto 2
+```
+Unlock for both read and write lock
+```go
+delete(n, -1)
+```
+#### Why does write lock not wait for read lock to be released?
+Write lock does wait for read locks. 
+![lock](../assets/img/zookeeper/Picture1.png)
 
 ## Questions
 Refering from [here](https://pdos.csail.mit.edu/6.824/papers/zookeeper-faq.txt).
+
+### What is pipelining?
+There are two things going on here. First, the ZooKeeper leader (really the leader's Zab layer) batches together multiple client operations in order to send them efficiently over the network, and in order to efficiently write them to disk. For both network and disk, it's often far more efficient to send a batch of N small items all at once than it is to send or write them one at a time. This kind of batching is only effective if the leader sees many client requests at the same time; so it depends on there being lots of active clients.
+
+The second aspect of pipelining is that ZooKeeper makes it easy for each client to keep many write requests outstanding at a time, by supporting asynchronous operations. From the client's point of view, it can send lots of write requests without having to wait for the responses (which arrive later, as notifications after the writes commit). From the leader's point of view, that client behavior gives the leader lots of requests to accumulate into big efficient batches.
+
+A worry with pipelining is that operations that are in flight might be re-ordered, which would cause the problem that the authors to talk about in 2.3. If the leader has many write operations in flight followed by write to ready, you don't want those operations to be re-ordered, because then other clients may observe ready before the preceding writes have been applied. To ensure that this cannot happen, ZooKeeper guarantees FIFO for client operations; that is the client operations are applied in the order they have been issued.
 
 ### What does wait-free mean?
 The precise definition: A wait-free implementation of a concurrent data object is one that guarantees that any process can complete any operation in a finite number of steps, regardless of the execution speeds of the other processes. This definition was introduced in the following paper by Herlihy: 
@@ -95,7 +176,7 @@ https://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf
 
 Zookeeper is wait-free because it processes one client's requests without needing to wait for other clients to take action. This is partially a consequence of the API: despite being designed to support client/client coordination and synchronization, no ZooKeeper API call is defined in a way that would require one client to wait for another. In contrast, a system that supported a lock acquire operation that waited for the current lock holder to release the lock would not be wait-free.
 
-Ultimately, however, ZooKeeper clients often need to wait for each other, and ZooKeeper does provide a waiting mechanism -- watches. The main effect of wait-freedom on the API is that watches are factored out from other operations. **The combination of atomic test-and-set updates (e.g. file creation and writes condition on version) with watches allows clients to synthesize more complex blocking abstractions** (e.g. Section 2.4's locks and barriers).
+Ultimately, however, ZooKeeper clients often need to wait for each other, and ZooKeeper does provide a waiting mechanism -- **watches**. The main effect of wait-freedom on the API is that watches are factored out from other operations. **The combination of atomic test-and-set updates (e.g. file creation and writes condition on version) with watches allows clients to synthesize more complex blocking abstractions** (e.g. Section 2.4's locks and barriers).
 
 ### What is the reason for implementing 'fuzzy snapshots'?
 
