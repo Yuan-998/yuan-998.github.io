@@ -25,7 +25,7 @@ But the read request can get outdated information. Hence, there is no linearzabi
 Pay attention that it is *serializable* memtioned here not *linearizable*, since ZooKeeper can only guarantee all write requests are ordered by the leader and the order will be applied to every node in ZooKeeper. Read requests are not guaranteed to get the lastest data.
 
 ### FIFO-ordering for Clients
-> All requests from a given client are executed in the order that they were sent by the client.
+> All **requests** (not just write requests) from a given client are executed in the order that they were sent by the client.
 
 ![FIFO](../assets/img/zookeeper/FIFO-order.png)
 
@@ -33,7 +33,9 @@ For write requests, all writes requests from a single client will be sent to the
 
 For read requests, a read request can be carried on multiple server on the condition that a server crashes when carrying out the read request and the read request has be to redirected to other server.
 
-Let's say there is **only one client** in the system and the client issued a sequence of requests like this, `write(A=10), write(B=8), read(B), read(A)`. These requests must be carried in this order, which means `read(B)` returns `8`. There is a mechanism (zxid) in ZooKeeper to make sure that no matter the read request goes to which server, it will get the lastest result. However, this is not guaranteed if there are multiple clients. Other clients might write B as well and the requests might be arranged between `write(B=8)` and `read(B)`.
+Let's say there is **only one client** in the system and the client issued a sequence of requests like this, `write(A=10), write(B=8), read(B), read(A)`. These requests must be carried in this order, which means `read(B)` returns `8`. There is a **mechanism (zxid)** in ZooKeeper to make sure that **no matter the read request goes to which server**, it will get the lastest result. The read request will also carry a *zxid* of the latest preceding operations that the client submitted. **The server will ensure its state is at least as up to date as the client's zxid before responding.**
+
+However, this is not guaranteed if there are multiple clients. Other clients might write B as well and the requests might be arranged between `write(B=8)` and `read(B)`.
 
 So, is ZooKeeper linearizable or not?
 **ZooKeeper is neither totaly linearizable or totaly non-linearizable.** It provides linearizability only when there is one client.

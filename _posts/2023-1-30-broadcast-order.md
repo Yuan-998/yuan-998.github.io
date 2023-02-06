@@ -26,23 +26,25 @@ It is assumed here that **single leader approach** is deployed to have total ord
 
 The first case is as follows.
 ![case1](../assets/img/broadcast/case1.jpeg)
-`P1 broadcast`$\rArr$`P2 broadcast`
-The P2P message won't go through the `coordinator`. So, it is possible that `P2's` broadcast arrives at the `coordinator` earilier than `P1's` due to some possible network issues. In this case, there is no causality between broadcasts.
+Causality: `P1 broadcast` <a>&rarr;</a> `P2 broadcast`: `P1 broadcast` <a>&rarr;</a> `P1 message to P2` <a>&rarr;</a> `P2 broadcast`
 
-However, in the second case as follows.
+The P2P message won't go through the `coordinator` since it it not a broadcast. So, it is possible that `P2's` broadcast arrives at the `coordinator` earilier than `P1's` due to some possible network issues. In this case, there is no causality between broadcasts.
+
+However, in the second case (only broadcast) as follows.
 ![case2](../assets/img/broadcast/case2.jpeg)
-`P1 broadcast`$\rArr$`P2 broadcast`
-The broadcast from `P2` can only start after the broadcast from `P1` (or possbile some more intermediate broadcasts) being delivered to `P2`. Hence, causality is conserved. 
+causality: `P1 broadcast` <a>&rarr;</a> `P2 broadcast`: `P1 broadcast` <a>&rarr;</a> `0 or many intermediate broadcast` <a>&rarr;</a> `P2 broadcast`
+
+All broadcasts have to go through the coordinator. The broadcast from `P2` can only start after the broadcast from `P1` (or possbile some more intermediate broadcasts) being delivered to `P2`. Hence, causality is conserved. 
 
 ### 2. Why does Total order broadcast not imply Causal broadcast?
 Let's take a look at the scenario in the figure below.
 ![case3](../assets/img/broadcast/case3.jpeg)
 `b` stands for *broadcast* here.
 
-The causality is `b1` $\rArr$ `b2` $\rArr$ `b3`. So, we have `b1` $\rArr$ `b3`.
+causality: `b1` <a>&rarr;</a> `b3`: `b1` <a>&rarr;</a> `b2` <a>&rarr;</a> `b3`
 
-In single leader total order broadcast, the causality of `b2` $\rArr$ `b3` can still be preserved the same as FIFO-total order broadcast. 
+In single leader total order broadcast, the causality of `b2` <a>&rarr;</a> `b3` can still be preserved the same as FIFO-total order broadcast. 
 
-However, `b1` $\rArr$ `b2` is not guaranteed since there is no FIFO order guaranteed in total order broadcast; `b1` and `b2` can be reordered, which also means `b1` $\rArr$ `b3` is not guaranteed. Meanwhile, they are guaranteed by FIFO-total order.
+However, `b1` <a>&rarr;</a> `b2` is not guaranteed since there is no FIFO order guaranteed in total order broadcast; `b1` and `b2` can be reordered, which also means `b1` <a>&rarr;</a> `b3` is not guaranteed. However, they are guaranteed by FIFO-total order.
 
 So, total order does not imply causal order.
