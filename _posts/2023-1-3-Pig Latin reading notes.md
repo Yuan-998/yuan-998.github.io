@@ -23,7 +23,8 @@ Pig abstracts the low-level primitive into some commonly used operations. For ex
 `Pig Latin = SQL-kind queries + Distributed execution(MapReduce)`
 
 ### System Overview
-`Pig Lation Program -> One or more MapReduce jobs -> Execute the jobs on a given hadoop cluster`
+`Pig Latin Program -> One or more MapReduce jobs -> Execute the jobs on a given hadoop cluster`
+
 ![overview](../assets/img/Pig/Pig-Architecture-2.png)
 
 #### Features
@@ -60,7 +61,7 @@ In this stage, the **logical operators** will be optimized by a *logical optimiz
 The optimized logical plan is then compiled into a series of Map-Reduce jobs.
 
 #### Map-Reduce Optimizer
-Optimization based on Map-Reduce *[combiner](./2023-1-3-Mapreduce%20reading%20notes.md#Combiner-Function)* stage to perform early partial aggregation.
+For example, Optimization based on Map-Reduce *[combiner](2023-1-3-Mapreduce%20reading%20notes.md#combiner-function)* stage to perform early partial aggregation.
 
 In the end, the DAG of optimized Map-Reduce jobs is topologically sorted and ready to be executed by Hadoop in that order.
 
@@ -86,7 +87,7 @@ From logical plan to Map-Reduce execution plan.
 
 `Logical Plan -> Physical Plan -> MapReduce Plan`
 
-This is done by the MapReduce compiler??
+This is done by the **Pig Compiler**.
 
 #### Logical Plan Structure
 The work of [parser](#parsing).
@@ -127,6 +128,9 @@ If a Pig Latin program contains more than one `STORE` command, the generated phy
 Only one optimization is carried at this level: Pig breaks *distributive* and *algebraic* aggregation functions into a series of three steps: `initial`, `intermediate`, and `final`. These steps are assigned to the `map`, `combine`, and `reduce` stages respectively.
 
 The final step generates a Java jar file that contains the Map and Reduce implementation classes, as well as any user-defined functions that will be invoke as part of the job.
+
+### Summary
+![summary](../assets/img/Pig/summary.png)
 
 ## Plan Execution
 ### Flow Control
