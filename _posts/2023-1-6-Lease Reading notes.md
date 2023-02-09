@@ -33,9 +33,9 @@ Slower server clock / Faster client clock -> no errors but extra traffic
 They can be detected by either a synchronization protocol or by including timestamps in lease-related messages.
 
 ## In-depth Analysis on Lease Timing
-https://zhuanlan.zhihu.com/p/268370901 (Written in Chinese)
+<a>https://zhuanlan.zhihu.com/p/268370901</a> (Written in Chinese)
 
 
 ## Questions
-### Does lease require locking?
-Leases are essentially a distributed lock with a granted duration.
+### What is the lease in GFS?
+For [GFS](2023-1-23-GFS.md), a lease is a period of time in which a particular chunkserver is allowed to be the primary for a particular chunk. Leases are a way to avoid having the primary have to repeatedly ask the master if it is still primary -- it knows it can act as primary for the next minute (or whatever the lease interval is) without talking to the master again.
