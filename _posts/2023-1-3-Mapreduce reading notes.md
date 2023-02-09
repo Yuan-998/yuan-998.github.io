@@ -37,15 +37,21 @@ My understanding is that the split is actually logic split. So, the input files 
 There are *M* map tasks and *R* reduce tasks to assign. The master picks idle workers and assigns each one a map task or a reduce task.
 
 #### 3 and 4. Intermediate key/value pairs
-One thing mentioned in the paper is that the intermediated key/value pairs produced by the `Map` function are buffered in memory and they will be written to local disk **periodically** after partitioned by the partitioning function. To my understanding, the purpose of this is to reduce the I/O workload by writing the intermedia pairs in batch. 
+One thing mentioned in the paper is that the intermediated key/value pairs produced by the `Map` function are buffered in memory and they will be written to local disk **periodically** after partitioned by the partitioning function. 
+
+To my understanding, the purpose of this is to reduce the I/O workload by writing the intermedia pairs in batch. 
 
 #### 5. Remote Read in Reduce Phase
-In my implementation of lab 1 from MIT 6.824, I have implemented a strategy to have the worker in map phase to start reduce task when it finishes the map task. I am not sure whether this is really the case in MapReduce. But, I could see one benefit of doing so is that this can reduce the need for remote read. See more [here](#jobtracker-and-tasktracker)
+In my implementation of lab 1 from MIT 6.824, I have implemented a strategy to have the worker in map phase to start reduce task when all map tasks are done. I am not sure whether this is really the case in MapReduce. It can be true. Considering a case that there is only one node in MapReduce, so this node has to work on both map and reduce tasks. But how the situation in large group of nodes is is unclear.
+
+However, I could see one benefit of doing so is that this can reduce the need for remote read. See more [here](#jobtracker-and-tasktracker)
 
 ### Master Data Structures
 - It stores the state (*idle*, *in-process*, or *completed*) of each map and reduce task
 - It stores the locations and sizes of the *R* intermediate file regions produced by the map task
 - It pushes the information of intermediate files to *in-process* reduce tasks
+
+It is quite similar to the master node in [GFS](2023-1-23-GFS.md) storing all the metadata.
 
 ### Fault Tolerance
 #### Worker Failure
