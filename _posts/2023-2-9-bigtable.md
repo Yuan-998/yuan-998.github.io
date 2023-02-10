@@ -2,12 +2,11 @@
 layout: post
 title: Bigtable
 subtitle: Reading notes of Bigtable paper
-cover-img: "../assets/img/bigtable/cover.jpeg"
+cover-img: "../assets/img/bigtable/cover.png"
 tags: [Distributed System]
 readtime: true
 ---
-A shorter version.
-<object data="../assets/img/bigtable/bigtable.pdf" type="application/pdf" width="700px" height="700px">
+<object data="../assets/img/bigtable/bigtable.pdf" type="application/pdf" width="700px" height="1000px">
     <embed src="../assets/img/bigtable/bigtable.pdf">
         <p>This browser does not support PDFs. Please download the PDF to view it: <a href="../assets/img/bigtable/bigtable.pdf">Download PDF</a>.</p>
     </embed>
@@ -18,7 +17,7 @@ A Bigtable is a *sparse*, *distributed*, *persistent multi-dimensional sorted* m
 key-value: 
 `(row: string, column: string, time: int64) --> string`
 
-
+# Supplements 
 ## Data Model
 A BigTable is a table of data with `rows` and `columns`.
 
@@ -185,3 +184,16 @@ Read operation:
   - merging compaction that produces a single SSTable
   - let you supress deleted data, that previously lived in old SSTables (tombstoens)
 
+### Refinements
+- Locality groups: Grouping mulitple column families together into a *locality group*. Segregating column families that are not typically accessed together into seperate locality groups. Each *locality group* is stored in a seperate SSTable
+- Compression: compress the SSTable for a locality group; 10-to-1 reduction in space
+- Caching for read performance: two levels of caching in tablet servers, 
+  - the **Scan Cache**: higher-level cache caching the key-value pairs returned by the SSTable interface to teh tablet server code
+  - the **Block Cache**: lower-level cache that caches SSTables blocks that were read from GFS
+- Bloom filters: A Bloom filter allows us to ask whether an SSTable might contain any data for a specified row/column pair.
+- Commit-log implementation: append mutations to a single commit log per tablet server, co-mingling mutations for different tablets in the same physical log file
+- Speeding up tablet recovery: minor compaction on the source tablet server when doing a tablet migration. Another minor compaciont before tablet server goes down
+- Exploiting immutability: 
+  - The only mutable data structure that is accessed by both reads and writes is the memtable and each memtable row can do copy-on-write; 
+  - Garbage collecting obsolete SSTable
+  - Immutability of SSTable enables quicker tablets split. The child tablets share the SSTables of the parent tablet instead of generating a new set of SSTables for each child tablet
