@@ -142,7 +142,7 @@ The ***METADATA* table** stores the location of a tablet under a row key that is
    3. The master communicates with every live tablet server to discover what tablets are already assigned to each server
    4. The master scan *METADATA* table to learn the set of tablets and move unassigned tablets to the set of unassigned tablets where they wait to be assigned
        - The scan cannot happen until the *METADATA* tablets have been assigned. The [root tablet](#tablet-location) will added to the set of unassigned tablets before step 3.
-- The set of existing tablets only changes when a table is **created** or **deleted**, two existing tablets are **merged** to from one larger tablet, or an existing tablet is **split** into two smaller tablets
+- The set of existing tablets only changes when a table is **created** or **deleted**, two existing tablets are **merged** to form one larger tablet, or an existing tablet is **split** into two smaller tablets.
 
 ### Tablet Serving
 ![serving](../assets/img/bigtable/serving.png)
@@ -209,7 +209,11 @@ Value: user123@example.com
 ```
 
 #### What are the indices of the SSTables?
-see [here](#building-blocks)
+The B-tree index structure used in Bigtable is used to index the blocks that store SSTables.
+
+Each block in Bigtable is associated with a range of keys, and the B-tree structure is used to map keys to the appropriate blocks. This allows for efficient lookups of data, even when the data is stored across many blocks.
 
 #### What is the merged view?
 The merged view in Bigtable refers to the combined view of the data that is stored in multiple SSTables, providing a single, unified view of the data and a single, unified interface for performing operations on the data.
+
+The merged view is implemented as a skip list, which is a data structure that allows for efficient traversal of large data sets. The skip list is used to traverse the SSTables on disk and merge their data into a single view, which is then returned to the client.
