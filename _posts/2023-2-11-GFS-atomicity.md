@@ -2,7 +2,7 @@
 layout: post
 title: The atomicity of GFS
 subtitle: discussion on atomicity of GFS
-cover-img: "../assets/img/GFS/cover.png"
+cover-img: "../assets/img/GFS/cover.jpeg"
 tags: [Distributed System]
 readtime: true
 ---
