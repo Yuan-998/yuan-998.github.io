@@ -6,18 +6,20 @@ cover-img: "../assets/img/bigtable/cover.png"
 tags: [Distributed System]
 readtime: true
 ---
+A short version of notes:
 <object data="../assets/img/bigtable/bigtable.pdf" type="application/pdf" width="700px" height="1000px">
     <embed src="../assets/img/bigtable/bigtable.pdf">
         <p>This browser does not support PDFs. Please download the PDF to view it: <a href="../assets/img/bigtable/bigtable.pdf">Download PDF</a>.</p>
     </embed>
 </object>
 
+# Supplements 
+
 A Bigtable is a *sparse*, *distributed*, *persistent multi-dimensional sorted* map.
 
 key-value: 
 `(row: string, column: string, time: int64) --> string`
 
-# Supplements 
 ## Data Model
 A BigTable is a table of data with `rows` and `columns`.
 
@@ -105,8 +107,6 @@ Bigtable has **three** major components: `A library that is linked to every clie
 
 **A Bigtable cluster** stores a number of **tables**. Initially, each table consists of just one tablet. As a table grows, it is automatically split into multiple tablets, each approximately `100-200` MB in size by default.
 
-#### How are the mapping of tablets to tables stored?
-
 ### Tablet Location
 ![location](../assets/img/bigtable/location.png)
 
@@ -151,16 +151,10 @@ The ***METADATA* table** stores the location of a tablet under a row key that is
 - The recently committed updates are stored in memory in a sorted buffer called a ***memtable***
 - The older updates are stored in a sequence of ***SSTables***
 
-#### So, memtable, SSTables and commit log store the same kind of data?
-No, the commit log contains [redo records](https://docs.oracle.com/cd/E18283_01/server.112/e17120/onlineredo001.htm). 
-
 To recover a tablet:
   1. A tablet server reads its metadata from the *METADATA* table
-  2. The metadata has the list of SSTables that comprise a tablet and a set of a redo points
-  3. The server reads the indices of the SSTables into memroy and reconstructs the memtable by applying all of the updates that have committed since the redo points
-
-#### What are the indices of the SSTables?
-see [here](#building-blocks)
+  2. The metadata has the list of SSTables that comprise a tablet and a set of a [redo points](#compactions)
+  3. The server reads the indices of the SSTables into memory and reconstructs the memtable by applying all of the updates that have committed since the redo points
 
 Write operation:
    1. Check the access permissions
@@ -170,8 +164,6 @@ Write operation:
 Read operation:
    1. Check the access permissions
    2. A valid read operation is executed on a merged view of the sequence of SSTable and the memtable
-
-#### What is the merged view?
 
 ### Compactions
 - When memtable reaches a threshold size, a minor compaction happens
@@ -185,15 +177,39 @@ Read operation:
   - let you supress deleted data, that previously lived in old SSTables (tombstoens)
 
 ### Refinements
-- Locality groups: Grouping mulitple column families together into a *locality group*. Segregating column families that are not typically accessed together into seperate locality groups. Each *locality group* is stored in a seperate SSTable
-- Compression: compress the SSTable for a locality group; 10-to-1 reduction in space
-- Caching for read performance: two levels of caching in tablet servers, 
+- **Locality groups**: Grouping mulitple column families together into a *locality group*. Segregating column families that are not typically accessed together into seperate locality groups. Each *locality group* is stored in a seperate SSTable
+- **Compression**: compress the SSTable for a locality group; 10-to-1 reduction in space
+- **Caching for read performance**: two levels of caching in tablet servers, 
   - the **Scan Cache**: higher-level cache caching the key-value pairs returned by the SSTable interface to teh tablet server code
   - the **Block Cache**: lower-level cache that caches SSTables blocks that were read from GFS
-- Bloom filters: A Bloom filter allows us to ask whether an SSTable might contain any data for a specified row/column pair.
-- Commit-log implementation: append mutations to a single commit log per tablet server, co-mingling mutations for different tablets in the same physical log file
-- Speeding up tablet recovery: minor compaction on the source tablet server when doing a tablet migration. Another minor compaciont before tablet server goes down
-- Exploiting immutability: 
+- **Bloom filters**: A Bloom filter allows us to ask whether an SSTable might contain any data for a specified row/column pair.
+- **Commit-log implementation**: append mutations to a single commit log per tablet server, co-mingling mutations for different tablets in the same physical log file
+- **Speeding up tablet recovery**: minor compaction on the source tablet server when doing a tablet migration. Another minor compaciont before tablet server goes down
+- **Exploiting immutability**: 
   - The only mutable data structure that is accessed by both reads and writes is the memtable and each memtable row can do copy-on-write; 
   - Garbage collecting obsolete SSTable
   - Immutability of SSTable enables quicker tablets split. The child tablets share the SSTables of the parent tablet instead of generating a new set of SSTables for each child tablet
+
+### Questions
+#### How are the mapping of tablets to tables stored?
+Each tablet in Bigtable is associated with a specific table, and the mapping between tablets and tables is maintained by the metadata layer in the Bigtable system.
+
+To determine which tablets belong to a particular table, you would look at the metadata for each tablet and check the name of the table associated with it.
+
+#### So, memtable, SSTables and commit log store the same kind of data?
+No, the commit log contains [redo records](https://docs.oracle.com/cd/E18283_01/server.112/e17120/onlineredo001.htm).
+An entry in commit log might be in this format:
+```yaml
+Timestamp: 2022-01-01 12:00:00
+Table: users
+Row Key: user123
+Column Family: personal_info
+Column Qualifier: email
+Value: user123@example.com
+```
+
+#### What are the indices of the SSTables?
+see [here](#building-blocks)
+
+#### What is the merged view?
+The merged view in Bigtable refers to the combined view of the data that is stored in multiple SSTables, providing a single, unified view of the data and a single, unified interface for performing operations on the data.
