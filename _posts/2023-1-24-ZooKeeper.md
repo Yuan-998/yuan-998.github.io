@@ -93,11 +93,17 @@ What if there's a network partition, new primary elected w/o applying Would need
 
 ## APIs
 > **create(path, data, flags)**: Create a new *znode* at *path* storing *data* and return the name of the new znode. A znode can only be created if it does not already exists. *flags* are used to indicate whether it is a regular or ephemeral and sequential or not.
+> 
 > **delete(path, version)**: If the version of *znode* at the *path* equals *version*, then delete the znode
+> 
 > **exists(path, watch)**: Return true if there is a *znode* at *path*, return false else.
+> 
 > **getData(path, watch)**: return data and metadata (e.g. version).
+> 
 > **setData(path, data, version)**: If *znode.version* == *version*, then update the *data*.
+> 
 > **getChildren(path, watch)**: Return all names of child znodes
+> 
 > **sync(path)**：Wait until all operations that updates the data arrive. `Sync` causes a server to apply all peding write requests before processing the read without the overhead of a full write. This primitive is similar in idea to the `flush` primitive of ISIS.
 
 There are *synchronous* and *asynchronous* versions of the API calls above. 
