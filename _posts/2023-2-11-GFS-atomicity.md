@@ -28,7 +28,7 @@ Both `client 1` and `client 2` want to write to the same `file` which consists o
 
 Now, each `write` request have to be split into `2`.
 
-`write 20MB` = `write 10MB at the end of chunk1` + `write 10MB at the start of 10MB`
+`write 20MB` = `write 10MB at the end of chunk 1` + `write 10MB at the start of chunk 2`
 
 Each chunk has its own `primary` replica at each update request and **`primary` replica only serializes the requests on this chunk.**, which means the above case can end in the following 4 results.
 ![case1.2](../assets/img/GFS/case1_2.png)
@@ -79,5 +79,5 @@ else
 There is not way to guarantee atomicity when write spans across chunks using `write` as discussed [above](#case-1). However, `record append` is at-least-once atomic. So, the part of data can be held in the first chunk are written in the normal `write` way since `write` provide atomicity within a chunk. The part in next chunk is updated by `record append`. This way, it is guaranteed that the second part will be successfully written into the second chunk. However, some measurements need to be taken to handle the offset returned by `record append`.
 
 ## Reference
-[《分布式系统与一致性》](https://book.douban.com/subject/35466098/)
-[Slides from University of Toronto](../assets/img/GFS/3-gfs-slides.pdf) 
+- [《分布式系统与一致性》](https://book.douban.com/subject/35466098/)
+- [Slides from University of Toronto](../assets/img/GFS/3-gfs-slides.pdf) 
