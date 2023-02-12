@@ -22,7 +22,7 @@ But the read request can get outdated information. Hence, there is no linearzabi
 ### Linearzible Writes
 > All request that update the state of ZooKeeper are **serializable** and respect precedence.
 
-Pay attention that it is *serializable* memtioned here not *linearizable*, since ZooKeeper can only guarantee all write requests are ordered by the leader and the order will be applied to every node in ZooKeeper. Read requests are not guaranteed to get the lastest data.
+Pay attention that it is *serializable* memtioned here not *linearizable*, since ZooKeeper can only guarantee all write requests are ordered by the leader and the order will be applied to every node in ZooKeeper. Read requests are not guaranteed to get the lastest data when there are requests from multiple client (it is different when there is only one client, see next section).
 
 ### FIFO-ordering for Clients
 > All **requests** (not just write requests) from a given client are executed in the order that they were sent by the client.
@@ -31,9 +31,11 @@ Pay attention that it is *serializable* memtioned here not *linearizable*, since
 
 For write requests, all writes requests from a single client will be sent to the leader, get ordered by the leader, and be carried in the order they were sent. For example, in the above figure, client A sent *m<sub>1</sub>* first and then *m<sub>3</sub>*. Client B sent *m<sub>2</sub>*. So the vaild orders of all events can be *(m<sub>2</sub>, m<sub>1</sub>, m<sub>3</sub>)* or *(m<sub>1</sub>, m<sub>2</sub>, m<sub>3</sub>)* or *(m<sub>1</sub>, m<sub>3</sub>, m<sub>2</sub>)*.
 
-For read requests, a read request can be carried on multiple server on the condition that a server crashes when carrying out the read request and the read request has be to redirected to other server.
+For read requests, a read request can be carried on multiple server in the case that a server crashes when answering to the read request. So, the read request has be to redirected to other server.
 
-Let's say there is **only one client** in the system and the client issued a sequence of requests like this, `write(A=10), write(B=8), read(B), read(A)`. These requests must be carried in this order, which means `read(B)` returns `8`. There is a **mechanism (zxid)** in ZooKeeper to make sure that **no matter the read request goes to which server**, it will get the lastest result. The read request will also carry a *zxid* of the latest preceding operations that the client submitted. **The server will ensure its state is at least as up to date as the client's zxid before responding.**
+Let's say there is **only one client** in the system and the client issued a sequence of requests as following, `write(A=10), write(B=8), read(B), read(A)`. These requests must be carried in this order, which means `read(B)` returns `8`. 
+
+There is a **mechanism**, zxid, in ZooKeeper to make sure that **no matter the read request goes to which server**, it will get the lastest result. The read request will also carry a *zxid* of the latest preceding operations that the client submitted. **The server will ensure its state is at least as up to date as the client's zxid before responding**.
 
 However, this is not guaranteed if there are multiple clients. Other clients might write B as well and the requests might be arranged between `write(B=8)` and `read(B)`.
 
@@ -43,7 +45,7 @@ So, is ZooKeeper linearizable or not?
 ### sync
 `sync` method is an operation to make sure the read request can get the lastest data.
 
-Consider the scenario of two clients, A and B. If client A sets the value of a znode /a from 0 to 1, then tells client B to read /a, client B may read the old value of 0, depending on which server it is connected to. If it is important that Client A and Client B read the same value, Client B should should call the **sync()** method from the ZooKeeper API method before it performs its read.
+Consider the scenario of two clients, A and B. If client A sets the value of a znode `a` from 0 to 1, then tells client B to read `a`, client B may read the old value of 0, depending on which server it is connected to. If it is important that Client A and Client B read the same value, Client B should should call the **sync()** method from the ZooKeeper API method before it performs its read.
 
 ## Data Model
 ![data_model](../assets/img/zookeeper/data_model.png)
@@ -169,18 +171,18 @@ Write lock does wait for read locks.
 ![lock](../assets/img/zookeeper/Picture1.png)
 
 ## Questions
-Refering from [here](https://pdos.csail.mit.edu/6.824/papers/zookeeper-faq.txt).
+[Reference](https://pdos.csail.mit.edu/6.824/papers/zookeeper-faq.txt).
 
 ### What is pipelining?
 There are two things going on here. First, the ZooKeeper leader (really the leader's Zab layer) batches together multiple client operations in order to send them efficiently over the network, and in order to efficiently write them to disk. For both network and disk, it's often far more efficient to send a batch of N small items all at once than it is to send or write them one at a time. This kind of batching is only effective if the leader sees many client requests at the same time; so it depends on there being lots of active clients.
 
-The second aspect of pipelining is that ZooKeeper makes it easy for each client to keep many write requests outstanding at a time, by supporting asynchronous operations. From the client's point of view, it can send lots of write requests without having to wait for the responses (which arrive later, as notifications after the writes commit). From the leader's point of view, that client behavior gives the leader lots of requests to accumulate into big efficient batches.
+The second aspect of pipelining is that ZooKeeper makes it easy for each client to keep many write requests outstanding at the same time by supporting asynchronous operations. From the client's point of view, it can send lots of write requests without having to wait for the responses (which arrive later, as notifications after the writes commit). From the leader's point of view, that client behavior gives the leader lots of requests to accumulate into big efficient batches.
 
-A worry with pipelining is that operations that are in flight might be re-ordered, which would cause the problem that the authors to talk about in 2.3. If the leader has many write operations in flight followed by write to ready, you don't want those operations to be re-ordered, because then other clients may observe ready before the preceding writes have been applied. To ensure that this cannot happen, ZooKeeper guarantees FIFO for client operations; that is the client operations are applied in the order they have been issued.
+A worry with pipelining is that operations that are in flight might be re-ordered, which would cause the problem that the authors to talk about in section 2.3. If the leader has many write operations in flight followed by write to read, you don't want those operations to be re-ordered, because then other clients may observe read before the preceding writes have been applied. To ensure that this cannot happen, ZooKeeper guarantees FIFO for client operations; that is the client operations are applied in the order they have been issued.
 
 ### What does wait-free mean?
 The precise definition: A wait-free implementation of a concurrent data object is one that guarantees that any process can complete any operation in a finite number of steps, regardless of the execution speeds of the other processes. This definition was introduced in the following paper by Herlihy: 
-https://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf
+<a>https://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf</a>
 
 Zookeeper is wait-free because it processes one client's requests without needing to wait for other clients to take action. This is partially a consequence of the API: despite being designed to support client/client coordination and synchronization, no ZooKeeper API call is defined in a way that would require one client to wait for another. In contrast, a system that supported a lock acquire operation that waited for the current lock holder to release the lock would not be wait-free.
 
@@ -195,7 +197,7 @@ The point of ZooKeeper's fuzzy snapshots is that ZooKeeper creates the snapshot 
 The Zookeeper leader turns the operations in the client API into idempotent transactions. For example, if a client issues a conditional setData and the version number in the request matches, the Zookeeper leader creates a setDataTXN that contains the new data, the new version number, and updated time stamps. This transaction (TXN) is idempotent: Zookeeper can execute it twice and it will result in the same state.
 
 ### How does ZooKeeper choose leaders?
-Zookeeper uses ZAB, an atomic broadcast system, which has leader election built in, much like Raft. Here's a paper about Zab: http://dl.acm.org/citation.cfm?id=2056409
+Zookeeper uses ZAB, an atomic broadcast system, which has leader election built in, much like Raft. Here's a paper about Zab: <a>http://dl.acm.org/citation.cfm?id=2056409</a>
 
 ### How big is the ZooKeeper database? It seem like the server must have a lot of memory.
 
@@ -206,7 +208,7 @@ It depends on the implementation. In most cases, the client library probably reg
 
 For example, a Go client for ZooKeeper implements it by passing a channel into "GetW()" (get with watch); when the watch triggers, an "Event" structure is sent through the channel. The application can check the channel in a select clause.
 
-See https://godoc.org/github.com/samuel/go-zookeeper/zk#Conn.GetW.
+See <a>https://godoc.org/github.com/samuel/go-zookeeper/zk#Conn.GetW</a>.
 
 ### Difference between `watch` and `sync`
 `sync` will **block** the `read` operation until all pending `write` operations are applied. 
@@ -217,3 +219,8 @@ There are different choices of tradeoff between latency and consistency.
 
 ### Does znode have permissions? E.g. znode created by a client can only be deleted by the same client.
 The permission of a znode can be managed specifically. See more [here](https://zookeeper.apache.org/doc/r3.5.7/zookeeperProgrammers.html#sc_ACLPermissions).
+
+## Exercise
+1. How does ZooKeeper ensure data consistency in a distributed system?
+2. How does ZooKeeper handle node failures in a distributed system?
+3. Describe the role of ZooKeeper in coordinating and synchronizing distributed transactions.
