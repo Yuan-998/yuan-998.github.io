@@ -190,6 +190,9 @@ Read operation:
   - Garbage collecting obsolete SSTable
   - Immutability of SSTable enables quicker tablets split. The child tablets share the SSTables of the parent tablet instead of generating a new set of SSTables for each child tablet
 
+### Architecture Overview
+![overview](../assets/img/bigtable/bigtable-archi.png)
+
 ### Questions
 #### How are the mapping of tablets to tables stored?
 Each tablet in Bigtable is associated with a specific table, and the mapping between tablets and tables is maintained by the metadata layer in the Bigtable system.
