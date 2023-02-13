@@ -1,6 +1,6 @@
 ---
 layout: post
-title: The atomicity of GFS
+title: The Atomicity of GFS
 subtitle: discussion on atomicity of GFS
 cover-img: "../assets/img/GFS/cover.jpeg"
 tags: [Distributed System]
