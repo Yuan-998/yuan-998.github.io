@@ -117,7 +117,7 @@ Pig first translates a logical plan into a physical plan, and then embeds each p
 ##### Physical Plan -> Hadoop stages
 Local rearrange operator simple annotates tuples with keys and stream identifiers, and let the Hadoop local sort stage do the work.
 
-Golbal rearrange operators are removed because their logic is implemented by the Hadoop shuffle and merge stage.
+Global rearrange operators are removed because their logic is implemented by the Hadoop shuffle and merge stage.
 
 Load and store are also removed, because the Hadoop framework takes care of reading and writing data.
 
