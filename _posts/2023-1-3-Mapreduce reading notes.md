@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Reading Notes of MapReduce Paper
+title: Study Notes of MapReduce
 tags: [MapReduce, Distributed System]
 readtime: true
 ---
@@ -153,3 +153,10 @@ term vector = a list of <word, frequency>
 map -> <word, document ID>
 reduce -> <word, list(document ID)>
 ```
+
+## Exercise
+#### Explain the difference between the Map and Reduce stages in MapReduce.
+The Map stage is responsible for transforming the input data into intermediate key-value pairs, while the Reduce stage is responsible for aggregating and summarizing the intermediate data to produce the final output.
+
+#### What is the purpose of the shuffle and sort phase in MapReduce?
+The shuffle and sort phase in MapReduce is a crucial step in the processing of data. It sorts the intermediate data produced by the Map stage and distributes it to the appropriate reduce tasks for further processing. The shuffle and sort phase ensures that the correct data is processed by the appropriate reduce task, which is important for the correct functioning of the MapReduce algorithm.
