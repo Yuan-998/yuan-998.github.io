@@ -160,3 +160,8 @@ The Map stage is responsible for transforming the input data into intermediate k
 
 #### What is the purpose of the shuffle and sort phase in MapReduce?
 The shuffle and sort phase in MapReduce is a crucial step in the processing of data. It sorts the intermediate data produced by the Map stage and distributes it to the appropriate reduce tasks for further processing. The shuffle and sort phase ensures that the correct data is processed by the appropriate reduce task, which is important for the correct functioning of the MapReduce algorithm.
+
+#### How does MapReduce handle a duplicate task?
+In the case that a work is so longer accessible (node crashed or network issue), the master will mark all the tasks (map tasks and reduce tasks) which are handled by this worker idle. These tasks will be reassigned and executed. The master will record the task is assigned to which worker and the further requests on the data produced by this task can go to the according worker.
+
+If a task is reassigned due to some network issues, then the previous worker won't handle any requests on the data since the recording in master indicate that another worker has the task.
