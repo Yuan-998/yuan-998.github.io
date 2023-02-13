@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Broadcast Order Models
-subtitle: some questions regarding the relationship between broadcast order models
+subtitle: some questions regarding the relationship among broadcast order models
 tags: [Distributed System]
 readtime: true
 ---
