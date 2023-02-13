@@ -19,7 +19,7 @@ However, in section `3.3` it is also mentioned that concurrent writes to the sam
 So, **are concurrent writes serializable or not?** And this question will lead us to GFS's atomicity in the end.
 
 ## The difference between `write` and `record append`
-`Write` and `record append` are discussed in [the previous blog](2023-1-23-GFS.md). One difference is how they handle the case where the updated data region spans across more than one chunk. We will look into this difference through some cases.
+`Write` and `record append` are discussed in [the previous blog](./2023-1-23-GFS.md). One difference is how they handle the case where the updated data region spans across more than one chunk. We will look into this difference through some cases.
 
 #### Case 1
 ![case1.1](../assets/img/GFS/case1_1.png)
