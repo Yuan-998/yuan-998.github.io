@@ -165,6 +165,24 @@ Read operation:
    1. Check the access permissions
    2. A valid read operation is executed on a merged view of the sequence of SSTable and the memtable
 
+#### The process for a write request
+1. Client sends the write request: A client application sends a write request to the Bigtable cluster, specifying the row key, column family, and column qualifier for the data to be written.
+2. Tablet server selection: The master server selects a tablet server responsible for the tablet that contains the row specified in the write request.
+3. Write to the write-ahead log (WAL): The selected tablet server writes the write request to its write-ahead log (WAL), which serves as a durable record of all changes to the data stored in the tablet.
+4. Memtable update: The tablet server updates its in-memory memtable data structure with the new data from the write request. The memtable is used to temporarily store write requests before they are written to disk as part of the SSTable compaction process.
+5. Replication: If Bigtable is configured for data replication, the tablet server replicates the write request to one or more tablet servers in other regions or zones.
+6. Response to client: The tablet server sends an acknowledgment to the client application, indicating that the write request has been successfully processed.
+7. Background compaction: In the background, Bigtable periodically performs a compaction process to merge the data in the memtable with the data stored in SSTables on disk. The compaction process frees up memory and optimizes the read performance of the tablet.
+
+#### The process for a read request
+1. Client sends the read request: A client application sends a read request to the Bigtable cluster, specifying the row key and the desired column family and column qualifier.
+2. Tablet server selection: The master server selects a tablet server responsible for the tablet that contains the row specified in the read request.
+3. Data retrieval: The selected tablet server retrieves the requested data from its local disk, either from an SSTable file or from its in-memory memtable data structure.
+4. Merge of multiple SSTables: If the data is stored in multiple SSTables, the tablet server merges the data from these SSTables into a single view of the data, which is then returned to the client.
+5. Data returned to client: The tablet server returns the requested data to the client application.
+
+
+
 ### Compactions
 - When memtable reaches a threshold size, a minor compaction happens
   - memtable is frozen and written to GFS as an SSTable
@@ -220,3 +238,12 @@ Each block in Bigtable is associated with a range of keys, and the B-tree struct
 The merged view in Bigtable refers to the combined view of the data that is stored in multiple SSTables, providing a single, unified view of the data and a single, unified interface for performing operations on the data.
 
 The merged view is implemented as a skip list, which is a data structure that allows for efficient traversal of large data sets. The skip list is used to traverse the SSTables on disk and merge their data into a single view, which is then returned to the client.
+
+#### What will happen when the master failed?
+The Chubby in Bigtable uses Paxos algorithm to keep its replicas consistent in the face of failure. And, Paxos provide mechanism to elect a new leader when the previous leader failed. 
+
+What's more, to ensure that a Bigtable cluster is not vulnerable to networking issues between the master and Chubby, the master kills itself if its Chubby session expires.
+
+#### Is the write-ahead log needed to be replicated?
+![a](../assets/img/bigtable/bigtable-architecture.svg)
+In addition to the SSTable files, all writes are stored in Colossus's shared log as soon as they are acknowledged by Bigtable, providing increased durability.
