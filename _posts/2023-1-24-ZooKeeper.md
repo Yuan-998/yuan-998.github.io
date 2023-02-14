@@ -224,3 +224,10 @@ The permission of a znode can be managed specifically. See more [here](https://z
 1. How does ZooKeeper ensure data consistency in a distributed system?
 2. How does ZooKeeper handle node failures in a distributed system?
 3. Describe the role of ZooKeeper in coordinating and synchronizing distributed transactions.
+
+## Summary
+ZooKeeper provides to its clients the abstration of a set of data nodes (znodes), organized according to a hierarchical name space. The client can manipulate znodes through APIs. 
+
+Updates on znodes are guaranted by ZooKeeper to be ordered in FIFO-order and are broadcasted by Zab atomically.
+
+Reading on znodes goes to the cached data on client first. The client can set *watch* to get notified when changes are made to them. 
