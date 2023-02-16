@@ -7,12 +7,13 @@ readtime: true
 ---
 
 ## Introduction
-ZooKeeper is not designed for general data storage. Instead, znodes map to abstractions of the client application, typically correspnding to meat-data used for coordination purposes.
+ZooKeeper is not designed for general data storage. Instead, znodes map to abstractions of the client application, typically correspnding to meta-data used for coordination purposes.
 
 Implementing `wait-free` data objects differentiates ZooKeeper significantly from systems based on blocking primitives such as locks.
 
 ## ZooKeeper Architecture
 ![architecture](../assets/img/zookeeper/architecture.png)
+
 Severs are classified into **leader** and **follower**. This is pretty much the same as Raft. However, unlike Raft, all nodes in ZooKeeper can handle **read** requests while **write** requests still go to leader.
 
 So, we can say that **ZooKeeper is designed for distributed system with read-dominant workloads**.
@@ -20,16 +21,16 @@ So, we can say that **ZooKeeper is designed for distributed system with read-dom
 But the read request can get outdated information. Hence, there is no linearzability in ZooKeeper. In order to address this problem, **linearzible writes** and **FIFO-ordering for clients** are introduced.
 
 ### Linearzible Writes
-> All request that update the state of ZooKeeper are **serializable** and respect precedence.
+> All request that update the state of ZooKeeper are **serializable** and respect precedence (Updates are linearizable).
 
-Pay attention that it is *serializable* memtioned here not *linearizable*, since ZooKeeper can only guarantee all write requests are ordered by the leader and the order will be applied to every node in ZooKeeper. Read requests are not guaranteed to get the lastest data when there are requests from multiple client (it is different when there is only one client, see next section).
+To guarantee that update operations satisfy linearizability, ZooKeeper implements a leader-based atomic broadcast protocol, called Zab. However, ZooKeeper can only guarantee all write requests are ordered by the leader and the order will be applied to every node in ZooKeeper. Read requests are not guaranteed to get the lastest data when there are requests from multiple clients (it is different when there is only one client, see next section).
 
 ### FIFO-ordering for Clients
 > All **requests** (not just write requests) from a given client are executed in the order that they were sent by the client.
 
 ![FIFO](../assets/img/zookeeper/FIFO-order.png)
 
-For write requests, all writes requests from a single client will be sent to the leader, get ordered by the leader, and be carried in the order they were sent. For example, in the above figure, client A sent *m<sub>1</sub>* first and then *m<sub>3</sub>*. Client B sent *m<sub>2</sub>*. So the vaild orders of all events can be *(m<sub>2</sub>, m<sub>1</sub>, m<sub>3</sub>)* or *(m<sub>1</sub>, m<sub>2</sub>, m<sub>3</sub>)* or *(m<sub>1</sub>, m<sub>3</sub>, m<sub>2</sub>)*.
+For write requests, all writes requests from a single client will be sent to the leader, get ordered by the leader, and be carried in the order they were sent. For example, in the above figure, client A sends *m<sub>1</sub>* first then *m<sub>3</sub>*. Client B sends *m<sub>2</sub>*. So the vaild orders of all events can be *(m<sub>2</sub>, m<sub>1</sub>, m<sub>3</sub>)*, *(m<sub>1</sub>, m<sub>2</sub>, m<sub>3</sub>)* or *(m<sub>1</sub>, m<sub>3</sub>, m<sub>2</sub>)*.
 
 For read requests, a read request can be carried on multiple server in the case that a server crashes when answering to the read request. So, the read request has be to redirected to other server.
 
@@ -117,7 +118,7 @@ An application calls the asynchronous API when it has multiple outstanding ZooKe
 #### No open() or close()
 There are no handles to access *znodes*. Each request has to include the full path of the *znode* being operated on.
 
-### watch
+### Watch
 *Watch* is to monitor this znode. *Watch* is to allow clients to receive timely notifications of changes without requiring polling. When a client issues a read operation with a watch flag set, the operation completes as normal except that the server promises to notify the client when the information returned has changed. *Watches* are **one-time trigger associated with a session**; they are unregistered once triggered or the session closed. *Watches* indicate that a change has happended, but **do not provide the change**.
 
 ### Features about APIs
@@ -230,4 +231,4 @@ ZooKeeper provides to its clients the abstration of a set of data nodes (znodes)
 
 Updates on znodes are guaranted by ZooKeeper to be ordered in FIFO-order and are broadcasted by Zab atomically.
 
-Reading on znodes goes to the cached data on client first. The client can set *watch* to get notified when changes are made to them. 
+Reading on znodes goes to the cached data on client first. The client can set *watch* to get notified when changes are made to them. What's more, the cache will be updated automatically by successful write operation.

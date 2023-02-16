@@ -31,10 +31,10 @@ It is mentioned in the paper that the input files will usually be split into `M`
 
 ##### When should it be 16 megabytes and when should it be 64 megabytes. 
 
-My understanding is that the split is actually logic split. So, the input files are untouched but the worker will read the specified amount of data from input files. Besides, the input files are stored in Datanodes in distributed file system, like `HDFS`. So, it would be more convenient for the worker to read files stored in itself to avoid remote read of data from other nodes bringing extra network cost. Hence, we may specify a split size that reduces remote read of data in distributed file system.
+My understanding is that the split is actually logic split. So, the input files are untouched but the worker will read the specified amount of data from input files. Besides, the input files are stored in Datanodes in a distributed file system, like `HDFS`. So, it would be more convenient for the worker to read files stored in itself to avoid remote data reading from other nodes. Hence, we may specify a split size that reduces remote data reading in distributed file system.
 
 #### 2. Master and Worker
-There are *M* map tasks and *R* reduce tasks to assign. The master picks idle workers and assigns each one a map task or a reduce task.
+There are `M` map tasks and `R` reduce tasks to assign. The master picks idle workers and assigns each one a map task or a reduce task.
 
 #### 3 and 4. Intermediate key/value pairs
 One thing mentioned in the paper is that the intermediated key/value pairs produced by the `Map` function are buffered in memory and they will be written to local disk **periodically** after partitioned by the partitioning function. 
@@ -55,7 +55,7 @@ It is quite similar to the master node in [GFS](2023-1-23-GFS.md) storing all th
 
 ### Fault Tolerance
 #### Worker Failure
-The master pings every worker **periodically**. If a worker doesn't response, any Map/Reduce tasks done (in case that those intermediate files are no longer accessible) or are being processed are marked as *idle* so that the tasks will be rescheduled.
+The master pings every worker **periodically**. If a worker doesn't response, any Map/Reduce tasks done (in case that those intermediate files are no longer accessible) or being processed are marked *idle* so that the tasks will be reassigned.
 
 #### Master Failure
 Unlike worker, the master is the one and only. So, when the master fails, when current implementation **aborts** the MapReduce computation.
@@ -89,14 +89,14 @@ When running large MapReduce operations on a significant fraction of the workers
 Since the reduce task worker will write the results in many seperate files and sometimes we need to gather the results all together. In hadoop system, you can run the following command. `hadoop fs -getmerge /output/dir/on/hdfs/ /desired/local/output/file.txt`
 
 ### Task Granularity
-We have *M* map tasks and *R* reduce tasks. *M + R* should be ideally much larger than the number of worker machines.
+We have `M` map tasks and `R` reduce tasks. *`M + R`* should be ideally much larger than the number of worker machines.
 
 Having each worker perform many different tasks improves dynamic load balancing, and also speeds up recovery when a worker fails.
 
 ### Backup Task
 `straggler`: a machine that takes an unusually long time to complete one of the last few map or reduce tasks in the computation.
 
-When a MapReduce operation is close to completion, the master schedules backup executions of the remaining in-progress tasks. The task is marked as completed whenever either the primary or the backup execution completes.
+When a MapReduce operation is close to completion (maybe no more idle tasks), the master schedules backup executions of the remaining in-progress tasks. The task is marked as completed whenever either the primary or the backup execution completes.
 
 ## Refinements
 

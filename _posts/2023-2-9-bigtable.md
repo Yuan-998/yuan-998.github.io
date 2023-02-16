@@ -23,8 +23,10 @@ key-value:
 ## Data Model
 A BigTable is a table of data with `rows` and `columns`.
 
-**Rows** are uniquely identified by a key
-**Columns** are organized column families
+**Rows** are uniquely identified by a key.
+
+**Columns** are organized column families.
+
 **Values** in each cell are versioned based on timestamp.
 
 ![data_model](../assets/img/bigtable/data_model.jpeg)
@@ -33,12 +35,12 @@ A BigTable is a table of data with `rows` and `columns`.
 - The row keys are arbitrary strings
 - Access to data under a single row key is atomic
 - Data are in lexicographic order by row key
-- *Tablet*: Row range for a table is **dynamically** partitioned and each row range is called a *tablet*; A unit of distribution and load balancing
+- *Tablet*: Row range for a table is **dynamically** partitioned and each row range is called a *tablet*; A unit of distribution and load balancing.
 
 Clients can exploit this property by selecting their row keys so that they get good locality for their data accesses.
 
 ### Column
-- Column keys are grouped into sets called *column families*, which form the basic unit of access control
+- Column keys are grouped into sets called *column family*, which form the basic unit of access control
   - All data stored in a column family is usually of the same type. They are compressed in the same column family together
   - Access control and both disk and memory accounting are performed at the column-family level
 - Column key: *family:qualifier*
@@ -133,7 +135,7 @@ The ***METADATA* table** stores the location of a tablet under a row key that is
   - Whenever a tablet server terminates, it attempts to release its **lock** so that the master will reassign its tablets more quickly
 - Master is responsible for detecting when a tablet server is no longer available
   - Master periodically asks each tablet server for the status of its lock
-    - If a tablet server reports that it has lost its lock, or if the master was unable to reach a server during its last several attempts, the master attempts to acquire an exclusive lock on the server's file
+    - If a tablet server reports that it has lost its lock, or if the master wasn't able to reach a server during its last several attempts, the master attempts to acquire an exclusive lock on the server's file
     - If the master is able to acquire the lock, then Chubby is live and the tablet server is either dead or having trouble reaching chubby, so the master ensures that the tablet server can never serve again by deleting its server file
     - Once a server's file has been deleted, the master can move all the tablets that were previously assigned to that server into the set of unassigned tablets
 - Master at startup
@@ -158,7 +160,7 @@ To recover a tablet:
 
 Write operation:
    1. Check the access permissions
-   2. A valid mutation is wriiten to the commit log (Group commit)
+   2. A valid mutation is written to the commit log (Group commit)
    3. The contents of write are inserted into the memtable
 
 Read operation:
@@ -166,20 +168,20 @@ Read operation:
    2. A valid read operation is executed on a merged view of the sequence of SSTable and the memtable
 
 #### The process for a write request
-1. Client sends the write request: A client application sends a write request to the Bigtable cluster, specifying the row key, column family, and column qualifier for the data to be written.
-2. Tablet server selection: The master server selects a tablet server responsible for the tablet that contains the row specified in the write request.
-3. Write to the write-ahead log (WAL): The selected tablet server writes the write request to its write-ahead log (WAL), which serves as a durable record of all changes to the data stored in the tablet.
-4. Memtable update: The tablet server updates its in-memory memtable data structure with the new data from the write request. The memtable is used to temporarily store write requests before they are written to disk as part of the SSTable compaction process.
-5. Replication: If Bigtable is configured for data replication, the tablet server replicates the write request to one or more tablet servers in other regions or zones.
-6. Response to client: The tablet server sends an acknowledgment to the client application, indicating that the write request has been successfully processed.
-7. Background compaction: In the background, Bigtable periodically performs a compaction process to merge the data in the memtable with the data stored in SSTables on disk. The compaction process frees up memory and optimizes the read performance of the tablet.
+1. **Client sends the write request**: A client application sends a write request to the Bigtable cluster, specifying the row key, column family, and column qualifier for the data to be written.
+2. **Tablet server selection**: The client first looks for the tablet server in its cached metadata, if it is not found or invalid, then the master server selects a tablet server responsible for the tablet that contains the row specified in the write request.
+3. **Write to the write-ahead log (WAL)**: The selected tablet server writes the write request to its write-ahead log (WAL), which serves as a durable record of all changes to the data stored in the tablet.
+4. **Memtable update**: The tablet server updates its in-memory memtable data structure with the new data from the write request. The memtable is used to temporarily store write requests before they are written to disk as part of the SSTable compaction process.
+5. **Replication**: If Bigtable is configured for data replication, the tablet server replicates the write request to one or more tablet servers in other regions or zones.
+6. **Response to client**: The tablet server sends an acknowledgement to the client application, indicating that the write request has been successfully processed.
+7. **Background compaction**: In the background, Bigtable periodically performs a compaction process to merge the data in the memtable with the data stored in SSTables on disk. The compaction process frees up memory and optimizes the read performance of the tablet.
 
 #### The process for a read request
-1. Client sends the read request: A client application sends a read request to the Bigtable cluster, specifying the row key and the desired column family and column qualifier.
-2. Tablet server selection: The master server selects a tablet server responsible for the tablet that contains the row specified in the read request.
-3. Data retrieval: The selected tablet server retrieves the requested data from its local disk, either from an SSTable file or from its in-memory memtable data structure.
-4. Merge of multiple SSTables: If the data is stored in multiple SSTables, the tablet server merges the data from these SSTables into a single view of the data, which is then returned to the client.
-5. Data returned to client: The tablet server returns the requested data to the client application.
+1. **Client sends the read request**: A client application sends a read request to the Bigtable cluster, specifying the row key and the desired column family and column qualifier.
+2. **Tablet server selection**:  The client first looks for the tablet server in its cached metadata, if it is not found or invalid, then the master server selects a tablet server responsible for the tablet that contains the row specified in the read request.
+3. **Data retrieval**: The selected tablet server retrieves the requested data from its local disk, either from an SSTable file or from its in-memory memtable data structure.
+4. **Merge of multiple SSTables**: If the data is stored in multiple SSTables, the tablet server merges the data from these SSTables into a single view of the data, which is then returned to the client.
+5. **Data returned to client**: The tablet server returns the requested data to the client application.
 
 
 
@@ -246,4 +248,7 @@ What's more, to ensure that a Bigtable cluster is not vulnerable to networking i
 
 #### Is the write-ahead log needed to be replicated?
 ![a](../assets/img/bigtable/bigtable-architecture.svg)
+
 In addition to the SSTable files, all writes are stored in Colossus's shared log as soon as they are acknowledged by Bigtable, providing increased durability.
+
+It won't be replicated. Each tablet server can store different tablets and there is no replication on this level. So, the shared log is just to log the operation on this server and to reconstruct the tablet server after failure.

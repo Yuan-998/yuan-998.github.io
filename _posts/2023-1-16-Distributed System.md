@@ -39,9 +39,9 @@ The above explaination of light cone is for sure not totally scientifically corr
 ## Ordering Events in Light Cone
 Recall the case described in Figure 1. When the information reaches the man, the man at the time *t<sub>1</sub>* knows for sure this event *e* happened at some time before now. But what if the information of more than one events arrive at the same time, how can they be ordered? The timestamp. If every event comes with a timestamp to indicate when it actually happened, they can be easily be ordered. In the real world, the timestamp is the physical time.
 
-Now events that are known can be ordered with help of timestamp. But how should the events that are still unknown be dealt with? At a point of time, you can give a "correct" order of all known events. However, maybe some time later, information of other events happened in the past has arrived and the order of all known events at this moment is definitely different from the one before.
+Now events that are known can be ordered with help of timestamp. But how should the events that are still unknown be dealt with? At some point of time, you can give a "correct" order of all known events. However, maybe some time later, information of other events happened in the past has arrived and the order of all known events at this moment is definitely different from the one before.
 
-So, one can never say for sure at a point of time that there is a correct order.
+So, one can never say for sure at some point of time that there is a correct order.
 
 ## Light Cone in Distributed System
 The idea of light cone can actually be applied to explain the difficulty of ordering event in distributed system as well.
@@ -125,3 +125,7 @@ Raft chooses *A* over *C* when *P* and *L* over *C* when *no P*.
 When there is a network partition, as long as there are still a quorum of nodes available, raft can still provide service. Data consistency will be guaranteed when the disconnected nodes join back. 
 
 When there is no network partition, as long as the data are written by a quorum of nodes, the system continues without blocking. The nodes will be inconsistent for some finite periods of time, but eventually they will be consistent.
+
+
+## Conclusion
+This blog's aim is to build the bridge between the concept of light cone and distributed system. This connection is often ignored in lots of articles talking about distributed system. Although this blog is still crappy and has a lot space to improve, I will try to make thi blog better when I have deeper understanding towards distributed system.
