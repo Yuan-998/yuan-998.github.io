@@ -55,9 +55,9 @@ They happened to be the two pain spots of distributed system.
 > - There is no reliable communication in distributed system
 
 ### Global Clock
-Time is a man-made concept. The temporal interval between the happenings of two events is called time. In order to make this concept universal, in [history of timekeeping devices](https://en.wikipedia.org/wiki/History_of_timekeeping_devices), there are many tools being utilized, e.g. Stonehenge, obelisk, water clock, incense clock, and sandglass. The idea behind these tools is to use something that happens temporally regularly to represent an time interval. Nowsdays, the idea of time is still the same but the tools has changed dramatically ([atomic clock](https://en.wikipedia.org/wiki/Atomic_clock), [satellites](https://www.gps.gov/applications/timing/)) to provide more precise measurements of time.
+Time is a man-made concept. The temporal interval between the happenings of two events is called time. In order to make this concept universal, in [history of timekeeping devices](https://en.wikipedia.org/wiki/History_of_timekeeping_devices), there are many tools being utilized, e.g. Stonehenge, obelisk, water clock, incense clock, and sandglass. The idea behind these tools is to use something that happens temporally regularly to represent a time interval. Nowadays, the idea of time is still the same but the tools has changed dramatically ([atomic clock](https://en.wikipedia.org/wiki/Atomic_clock), [satellites](https://www.gps.gov/applications/timing/)) to provide more precise measurement of time.
 
-Unfortunately, even with these highly precise and synchronized time measurements, [it is still unreliable to use physical time directly in distributed system](http://infolab.stanford.edu/~burback/dadl/node91.html#:~:text=In%20a%20distributed%20system%20there,clock%20has%20the%20exact%20time.).
+Unfortunately, even with these highly precise and synchronized time measurements, [it is still very hard to use physical time directly in distributed system](http://infolab.stanford.edu/~burback/dadl/node91.html#:~:text=In%20a%20distributed%20system%20there,clock%20has%20the%20exact%20time.).
 
 ### Communication
 In real world, there are many medium to carry information, sound, smell, and light. But in distributed system, the only mediunm is the network. Machines exchange information through network.
@@ -128,4 +128,4 @@ When there is no network partition, as long as the data are written by a quorum 
 
 
 ## Conclusion
-This blog's aim is to build the bridge between the concept of light cone and distributed system. This connection is often ignored in lots of articles talking about distributed system. Although this blog is still crappy and has a lot space to improve, I will try to make thi blog better when I have deeper understanding towards distributed system.
+This blog's aim is to build the bridge between the concept of light cone and distributed system. This connection is often ignored in lots of articles talking about distributed system. Although this blog is still crappy and has a lot space to improve, I will try to make this blog better when I have deeper understanding towards distributed system.
