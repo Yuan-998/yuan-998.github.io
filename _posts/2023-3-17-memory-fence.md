@@ -64,4 +64,16 @@ The `Execution Engine` guarantees that instructions are committed in program ord
 So, memory fence acts more to guarantee the order of instructions in store buffer. 
 
 #### How are the memory accessing instrucitons from different threads ordered in the store buffer with memory fence?
+![archi](../assets/img/memory_fence/PmR2H.png)
 
+We can see from the above figure that each physcial core has its own full components of `front end`, `out-of-order engine`, and `memory pipeline` including all kinds of `buffers`. 
+
+For situation like hyper threading, Intel partitions the store buffer in two; each logical core gets half. Loads from one logical core only snoop its own half of the store buffer [[source]](https://stackoverflow.com/questions/32979067/what-will-be-used-for-data-exchange-between-threads-are-executing-on-one-core-wi).
+
+
+## How memory fence works?
+Memory barriers don't cause the store buffer to be flushed, full barriers make the current core wait until the store buffer drains itself
+
+Load buffer + store buffer entries collectively form the **Memory Order Buffer (MOB)**. This structure is presumably where `mfence` and `lock`ed instructions can put a barrier that blocks StoreLoad reordering without blocking out-of-order execution.
+
+source: https://stackoverflow.com/a/54880249
