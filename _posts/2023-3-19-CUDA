@@ -1,0 +1,31 @@
+---
+layout: post
+title: Reading note of book, Cuda by Example.
+subtitle: Some doubts when reading the book
+tags: [CUDA, Parallel Programming]
+readtime: true
+---
+
+### 1. Host functions access memory allocated by cudaMalloc()
+
+<cite>
+You can pass pointers allocated with cudaMalloc() to functions that execute on the host.
+</cite>
+
+However, the code that executes on the host cannot use pointers allocated with *cudaMalloc()* to read or write memory.
+
+But why are functions running on the host able to do so?
+
+### 2. Semantic of cudaMemcpy()
+```c
+cudaMemcpy(&c, dev_c, sizeof(int), cudaMemcpyDeviceToHost); // Device to host
+
+cudaMemcpy(data, data_cpu,alloc_max, cudaMemcpyHostToDevice); // Host to device
+```
+
+`cudaMemcpy(1st, 2nd, ..., ...)` the 1st argument is always the destination and the 2nd argument is always the source.
+
+### 3. CUDA Memory Model
+![cuda](../assets/img/cuda/memory.png)
+
+`cudaMalloc()` and `cudaFree()` manage **global memory**.
