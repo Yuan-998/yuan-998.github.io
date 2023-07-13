@@ -226,5 +226,14 @@ func compute() (value float64, ok bool) {
 How to deal the possible failure of function returning floating point
 
 ### 03
-##### complex
+##### Complex
 `complex64` and `complex128`
+
+##### String
+Append Only
+```
+s := "left foot"
+s[0] = 'L' // Illegal
+```
+So that the correctness of the case in the figure is guaranteed.
+![string](../assets/img/the_go_programming_language/three.png)
