@@ -70,3 +70,35 @@ void shift(std::vector<std::pair<int, int>> &nums) {
 const std::vector<int> const_vec{1, 2, 3};
 const std::vector<int>& const_ref_vec{const_vec};
 ```
+
+## Streams
+**A general input/output(IO) abstraction for C++**, providing interface for reading and writting data.
+
+![](../assets/img/cs106l/streams.png)
+
+#### standard iostreams -- basic_ostream and basic_istream
+
+
+#### std::stringstream -- a way to treat strings as streams
+
+`>>` only reads to the next whitespace. 
+
+`istream& getline(istream& is, string& str, char delim)`: reads up until the `delim` char and stores it in some buffer, `str`. `delim` is by default `\n`. And `getline()` consumes the delim character.
+
+
+#### Output Streams
+`std::cout` stream is **line-buffered**. Contents in buffer not shown on external source until an explicit flush occurs.
+
+`std::endl` tells the stream to end the line and also to **flush**. **Flushing** is an expensive operation.
+
+> In many implementations, **standard output** is line-buffered, and writing '\n' causes a flush anyway, **unless std::ios::sync_with_stdio(false) was executed**. In those situations, unnecessary endl only degrades the performance of file output, not standard output.
+>
+>   https://en.cppreference.com/w/cpp/io/manip/endl
+
+
+#### Input/Output File Streams
+`std::ifstream` and `std::ofstream`
+
+##### std::cin
+- buffered
+- buffer stops at a whitespace
