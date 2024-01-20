@@ -6,9 +6,9 @@ readtime: true
 ---
 ## Initialization & References
 #### Initialization
-- Direct initialization: `int num = 12` or `int num(12.0) (narrowing conversion)`
-- Uniform initialization (Safe and Ubiquitous): `int num{12}`. Uniform initialization **does** care about types.
-- Structured Binding (C++ 17): e.g. `return {className, buildingName, language}`
+- **Direct initialization**: `int num = 12` or `int num(12.0) (narrowing conversion)`
+- **Uniform initialization** (Safe and Ubiquitous): `int num{12}`. Uniform initialization **does** care about types.
+- **Structured Binding** (C++ 17): e.g. `return {className, buildingName, language}`
 ```c++
 #include <iostream>
 #include <string>
