@@ -101,4 +101,4 @@ const std::vector<int>& const_ref_vec{const_vec};
 
 ##### std::cin
 - buffered
-- buffer stops at a whitespace
+- buffer stops at a whitespace --> `std::cin` reads only until the next whitespace
