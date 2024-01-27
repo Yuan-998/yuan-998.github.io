@@ -102,3 +102,32 @@ const std::vector<int>& const_ref_vec{const_vec};
 ##### std::cin
 - buffered
 - buffer stops at a whitespace --> `std::cin` reads only until the next whitespace
+
+## Containers
+
+#### Two types of containers:
+- Sequence:
+  - Containers that can be accessed sequentially
+  - Anything with an inherent order goes here
+- Associative:
+  - Containers that don't necessarily have a sequential order
+  - More easily searched
+  - Maps and sets go here
+
+#### Maps
+**Maps are implemented with pairs** (std::pair<const key, value>)
+
+- **const key**: Keys are immutable
+- Indexing into the map (myMap[key]) searches through the underlying collection of pairs first attribute for the key and will return its second attribute
+
+##### Ordered/Unordered maps and sets
+- **Ordered** maps/sets require a **comparison operator** to be defined
+- **Unordered** maps/sets require a **hash function** to be defined
+
+Unordered maps/sets are usually faster than ordered ones!
+
+#### Container Adaptors
+Container adaptors are "wrappers" to existing containers
+- Wrappers **modify the interface** to sequence containers and change what the client is allowed to do/how they can interact with the containers
+
+For example, how to make a wrapper to implement a queue from a deque?
