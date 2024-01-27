@@ -131,3 +131,31 @@ Container adaptors are "wrappers" to existing containers
 - Wrappers **modify the interface** to sequence containers and change what the client is allowed to do/how they can interact with the containers
 
 For example, how to make a wrapper to implement a queue from a deque?
+
+## Iterators and Pointers
+#### Iterators
+- Iterators let you access **all** data in containers programmatically
+- An iterator has a certain **order**; it knows what element will come next
+  - Not necessarily the same each time you iterate
+
+In the STL, all containers implement iterators, but they are not all the same.
+- Each container has its own iterator, which can have different **behaviour**.
+- All iterators implement a few shared operations:
+  - Initializing: s.begin()
+  - Incrementing: ++iter
+  - Dereferencing: *iter
+  - Comparing: iter != s.end()
+  - Copying: new_iter = iter
+
+![](../assets/img/cs106l/iterators.png)
+- **Input** iterators can appear on the RHS of an = operator (`auto elem = *it;`)
+- **Output** iterators can appear on the LHS of an = operator
+- **Bidirectional** iterators can go forward as well as backward (`--iter; ++iter;`)
+- **Random-access** iterators allow you to direcly access values without visiting all elements sequentially (`iter += 5;`)
+
+**Iteration with iterators is const**: When you iterate over a container using iterators, the elements accessed through the iterators are treated as const. This means you can read the values but cannot modify them through the iterator.
+
+#### Pointers
+Iterators are a particular type of pointer
+- Iterators "point" at particluar elements in a **container**
+- Pointers can "point" at **any objects** in your code
