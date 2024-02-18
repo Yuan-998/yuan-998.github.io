@@ -159,3 +159,149 @@ In the STL, all containers implement iterators, but they are not all the same.
 Iterators are a particular type of pointer
 - Iterators "point" at particluar elements in a **container**
 - Pointers can "point" at **any objects** in your code
+
+
+## Class
+- Containers are classes defined in the STL
+
+#### Comparing 'stuct' and 'class'
+***structures which are classes without access restrictions;***
+
+#### Class design
+1. A constructor
+2. Private member functions/variables
+3. Public member functions (interface for a user)
+4. Destructor
+
+### Container adapters
+- Container adapters provide the interface for serveral classes and act as a template parameter
+
+### Inheritance
+- A virtual function, meaning that it is instantiated in the base class but overwritten in the subclass.
+
+## Template Classes
+Template Class: A class that is parametrized over some number of types; it is comprised of memober variables of a general type/types
+
+A {template} container.h
+```c++
+template <typename T>
+// or template <typename T, typename U>, A template declaration list
+class Container {
+  public:
+    Container (T val);
+    T getValue();
+  
+  private:
+    T value;
+}
+```
+
+### Template functions
+Spot the difference:
+```c++
+template <class T>
+Container<T>::container(T val) {
+  this->value = val;
+}
+
+template <typename T>
+T container<T>::getValue() {
+  return value;
+}
+```
+
+```c++
+template <class T> // class and typename are interchangeable in basic cases
+Container::Container(T val) {
+  this->value = val;
+}
+
+template <typename T>
+T Container::getValue() {
+  return value;
+}
+```
+In the second code snippet, we don't pass in the template parameter in the class namespace
+
+C++ wants us to specify our template parameters in our namespace because, based on the parameters our class may behave differently. **There is no "one" Container, there is one for an int, char, etc.**
+
+##### Another quirk of templates
+When making template classes you need to #include the `.cpp` implementation in the `.h` file. A compiler quirk.
+```c++
+template <typename T>
+class Container {
+  public:
+    Container (T val);
+    T getValue();
+  
+  private:
+    T value;
+}
+
+//must include this
+#include "Container.cpp"
+```
+
+### Const correctness
+```c++
+std::string stringify(const Student& s) {
+  return s.getName() + " is " + std::to_string(s.getAge()) + " years old";
+}
+```
+**Compile error** for the above code.
+- By passing in `s` as `const` we made a promise to *not* modify `s`
+- The compiler doesn't know wheter or not **getName()** and **getAge()** modify `s`
+- Remember, member functions *can* access and modify member variables
+
+Solution:
+```c++
+...
+  private:
+    using String = std::string;
+    ...
+  public:
+    ...
+    String getName() const;
+    int getAge() const;
+    ...
+...
+```
+
+### Const Interface
+Definition: Objects that are const can only interact with the const-interface
+
+The const interface is simply the functions taht are const/do not modify the object/instance of the class
+
+```C++
+...
+int& at(size_t index) {
+  return _array[index];
+}
+
+int& at(size_t index) const { // a const version of our .at()
+  return _array[index];
+}
+...
+```
+
+But this process can be very painful when the size of the function grows.
+
+Solution: **Casting**
+```c++
+int& findItem(int value) {
+  for (auto& elem: arr) {
+    if (elem == value) return elem;
+  }
+
+  throw std::out_of_range("value not found");
+}
+
+const int& findItem(int value) const { 
+  return const_case<IntArray&> (*this).findItem(value);
+}
+```
+Breakdown:
+- `(*this)`: cast so that it is pointing to a non-const object
+- Call the non-const version of the function
+- Then cast the non-const return from the function call to a const version
+
