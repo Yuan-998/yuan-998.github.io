@@ -305,3 +305,151 @@ Breakdown:
 - Call the non-const version of the function
 - Then cast the non-const return from the function call to a const version
 
+## Template Functions
+Functions whose functionality can be adapted to more than one type or class without repeating the entire code for each type.
+```c++
+template <typename Type>
+Type myMin(Type a, Type b) {
+  return a < b ? a : b;
+}
+```
+- `template` indicating this function is a template
+- `typename` specifies that Type is generic
+- `Type` list of our template variables
+
+We can define default parameter types. `template <typename Type=int>`
+
+How to call a template functions: `cout << myMin<int>(3, 4) << endl;`
+
+**template functions are not compiled until used!**
+- For each instantiation with different parameters, the compiler generates a new specific version of your template
+- After compilation, it will look like you wrote each version yourself
+
+### Template metaprogramming
+With template metaprogramming, **code runs once during compile time**!
+```c++
+template<unsigned n>
+struct Factorial {
+  enum { value = n * Factorial<n - 1>::value };
+}
+
+template <> // template class "speciallization"
+struct Factorial<0> {
+  enum { value = 1 };
+}
+
+std::cout << Factorial<10>::value << endl; // prints 3628800, but run during compile time
+```
+
+##### constexpr
+The `constexpr` keyword specifies a constant expression.
+- Constant expressions must be immediately initialized and will run at compile time
+- Passd arguments to constant expressions should be const/constant expressions as well
+
+Variables can also be declared as `constexpr`
+```c++
+constexpr double fib(int n) {
+  if (n == 1) return 1;
+  return fib(n-1) * n;
+}
+
+int main() {
+  const long long bigval = fib(20);
+  std::cout << bigval << std::endl;
+}
+```
+
+##### why do we need template metaprogramming?
+- Compiled code ends up being smaller
+- Something runs once during compiling and can be used as many times as you like during runtime
+
+Applications of TMP:
+- Optimizing matrices/trees/other mathematical structure operations
+- Policy-based design
+- Game graphics
+
+## Functions and Lambdas
+### Function Pointers
+A function pointer:
+- Function pointers can be treated just like other pointers
+- They can be passed around like variables as parameters or in template functions
+- They can be called like functions
+  
+However, we cannot pass more than one parameter to the function the function pointer is pointing to.
+
+### Lambdas
+Lambdas are inline, anonymous functions that can know about functions declared in their same scope!
+```c++
+auto var = [capture-clause] (auto param) -> bool {
+  ...
+}
+```
+example:
+```c++
+int limit=5;
+auto isMoreThan = [limit] (int n) { return n > limit; };
+isMoreThan(6); //true
+```
+
+``` c++
+[]                  // captures nothing
+[limit]             // captures limit by value
+[&limit]            // captures limit by reference
+[&limit, uppper]    // captures limit by refernce, upper by value
+[&, limit]          // captures everything except limit by reference
+[&]                 // captures everything by reference
+[=]                 // captures everything by value
+```
+
+#### Functor
+A `Functor` is any class that provides an implementation of operator().
+```c++
+class functor {
+  public:
+    int operator() (int arg) const {
+      return num + arg;
+    }
+  private:
+    int num;
+};
+
+int num = 0;
+auto lambda = [&num] (int arg) { num += arg; };
+lambda(5);
+```
+**Lambdas are just a reskin of functors.**
+
+STL has an overarching, standard function object.
+`std::function<return_type(param_types)> func;`
+Everything (lambdas, functors, function pointers) can be cast to a standard function
+
+#### Virtual Funcitons
+- If you have a function taht can take in a pointer to the supercalss, it won't know to use the subclass's function!
+- The same issue happens if we create a superclass pointer to an existing subclass object.
+- To fix this, we can mark the overridden function as **virtual** in the header
+- Virtual functions are functions in the superclass we expect to be overridden later on
+
+```c++
+class Animal {
+  virtual void speak() {
+    std::cout << "I am a animal" << std::endl;
+  }
+}
+
+class Dog : Animal {
+  void speak() {
+    std::cout << "I am a animal" << std::endl;
+  }
+}
+
+void func(Animal* animal) {
+  animal->speak();
+}
+
+int main() {
+  Animal* myAnimal = new Animal;
+  Dog* myDog = new Dog;
+  func(myAnimal); // I am an animial
+  func(myDog);  // I am a dog
+}
+```
